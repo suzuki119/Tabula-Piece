@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Chess Engine Test — Tabula-Piece</title>
+  <style>
+    body { font-family: monospace; background: #1a1a2e; color: #eee; padding: 20px; }
+    h1   { color: #e94560; }
+    #board { display: grid; grid-template-columns: repeat(6, 60px); gap: 2px; margin: 20px 0; }
+    .cell {
+      width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;
+      font-size: 28px; cursor: pointer; border-radius: 4px; position: relative;
+    }
+    .cell.light  { background: #f0d9b5; }
+    .cell.dark   { background: #b58863; }
+    .cell.selected { outline: 3px solid #e94560; }
+    .cell.movable  { background: rgba(100, 200, 100, 0.6); }
+    .cell .label   { position: absolute; bottom: 2px; right: 3px; font-size: 9px; color: #666; }
+    #log  { background: #16213e; padding: 10px; border-radius: 6px; max-height: 200px; overflow-y: auto; font-size: 13px; }
+    #info { margin: 10px 0; font-size: 14px; color: #0f3460; background: #e0e0e0; padding: 8px; border-radius: 4px; }
+    #score { color: #ffd700; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Chess Engine Test</h1>
+  <div id="info">ターン: <span id="turn">1</span> / 手番: <span id="current">白 (player1)</span></div>
+  <div id="score">白: <span id="p1pts">0</span>pt　黒: <span id="p2pts">0</span>pt</div>
+  <div id="board"></div>
+  <div id="log"></div>
+
+  <script src="js/chess.js"></script>
+  <script>
+    const PIECE_SYMBOLS = {
+      white: { pawn:'♙', knight:'♘', bishop:'♗', rook:'♖', queen:'♕', king:'♔' },
+      black: { pawn:'♟', knight:'♞', bishop:'♝', rook:'♜', queen:'♛', king:'♚' },
+    };
+
+    let state    = Chess.createGameState(1, 2);
+    let selected = null;
+    let legalMoves = [];
+
+    function log(msg) {
+      const el = document.getElementById('log');
+      el.innerHTML = `<div>${msg}</div>` + el.innerHTML;
+    }
+
+    function updateInfo() {
+      document.getElementById('turn').textContent = state.turn;
+      const cp = state.currentPlayer;
+      document.getElementById('current').textContent =
+        cp === 'player1' ? '白 (player1)' : cp === 'player2' ? '黒 (player2)' : '─ 終了 ─';
+      document.getElementById('p1pts').textContent = Chess.calcPoints(state.board, 'white');
+      document.getElementById('p2pts').textContent = Chess.calcPoints(state.board, 'black');
+    }
+
+    function renderBoard() {
+      const el = document.getElementById('board');
+      el.innerHTML = '';
+      // row 6→1 の順で描画（黒側が上）
+      for (let r = 6; r >= 1; r--) {
+        for (let c = 0; c < 6; c++) {
+          const sq   = Chess.COLS[c] + r;
+          const cell = document.createElement('div');
+          const isLight = (c + r) % 2 === 0;
+          cell.className = 'cell ' + (isLight ? 'light' : 'dark');
+
+          if (sq === selected)           cell.classList.add('selected');
+          if (legalMoves.includes(sq))   cell.classList.add('movable');
+
+          const p = state.board[sq];
+          if (p) cell.textContent = PIECE_SYMBOLS[p.color][p.piece];
+
+          const label = document.createElement('span');
+          label.className = 'label';
+          label.textContent = sq;
+          cell.appendChild(label);
+
+          cell.addEventListener('click', () => onCellClick(sq));
+          el.appendChild(cell);
+        }
+      }
+      updateInfo();
+    }
+
+    function onCellClick(sq) {
+      if (state.status === 'finished') { log('試合終了: ' + state.winner); return; }
+
+      const player = state.currentPlayer;
+      const piece  = state.board[sq];
+
+      // 移動先クリック
+      if (selected && legalMoves.includes(sq)) {
+        try {
+          state = Chess.executeMove(state, player, selected, sq);
+          log(`[${player}] ${selected} → ${sq}`);
+          if (state.status === 'finished') {
+            log(`★ 試合終了！ 勝者: ${state.winner}（理由: ${state.endReason}）`);
+          }
+        } catch(e) {
+          log('エラー: ' + e.message);
+        }
+        selected   = null;
+        legalMoves = [];
+        renderBoard();
+        return;
+      }
+
+      // 駒選択
+      const myColor = player === 'player1' ? 'white' : 'black';
+      if (piece && piece.color === myColor) {
+        selected   = sq;
+        legalMoves = Chess.getLegalMoves(state.board, sq);
+        log(`選択: ${sq} (${piece.piece}) → 合法手: [${legalMoves.join(', ')}]`);
+      } else {
+        selected   = null;
+        legalMoves = [];
+      }
+
+      renderBoard();
+    }
+
+    renderBoard();
+    log('Chess engine loaded. 駒をクリックして移動テストできます。');
+  </script>
+</body>
+</html>
