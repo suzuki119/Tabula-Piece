@@ -484,6 +484,45 @@ body {
   opacity: 0.7;
 }
 
+/* スキル機会バナー */
+.turn-banner.opportunity {
+  background: rgba(80,220,120,0.15);
+  color: #50dc78;
+  border: 1px solid rgba(80,220,120,0.3);
+}
+
+/* スキル機会パネル */
+.piece-panel.skill-opportunity-panel {
+  border: 1px solid rgba(80,220,120,0.4);
+  background: var(--bg-card);
+}
+
+.opportunity-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #50dc78;
+  margin-bottom: 6px;
+}
+
+/* スキップボタン */
+.skip-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid rgba(167,169,190,0.25);
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s;
+}
+.skip-btn:hover { background: rgba(255,255,255,0.07); }
+
 /* スキル発動通知 */
 #skill-notice {
   position: fixed;

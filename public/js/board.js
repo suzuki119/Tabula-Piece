@@ -77,16 +77,25 @@ class BoardController {
       const res = await fetch(`${API_BASE}/state.php?match_id=${this.matchId}&user_id=${this.userId}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       this.state = await res.json();
-
-      // 再移動ペンディング中: その駒を自動選択
-      if (this.state.rematch_sq) {
-        this.selected   = this.state.rematch_sq;
-        this.legalMoves = Chess.getLegalMoves(this.state.board, this.state.rematch_sq, this.state.traps || {});
-      }
-
+      this._syncPendingSelection();
       this.render();
     } catch (e) {
       console.error('状態取得失敗:', e);
+    }
+  }
+
+  // 再移動・スキル機会に応じた選択状態を同期
+  _syncPendingSelection() {
+    const s = this.state;
+    if (s.rematch_sq) {
+      this.selected   = s.rematch_sq;
+      this.legalMoves = Chess.getLegalMoves(s.board, s.rematch_sq, s.traps || {});
+    } else if (s.skill_opportunity) {
+      this.selected   = s.skill_opportunity.sq;
+      this.legalMoves = [];
+    } else {
+      this.selected   = null;
+      this.legalMoves = [];
     }
   }
 
@@ -209,27 +218,19 @@ class BoardController {
   _applyServerResponse(data) {
     this.state = {
       ...this.state,
-      board:          data.board,
-      traps:          data.traps ?? this.state.traps ?? {},
-      turn:           data.turn,
-      status:         data.status,
-      is_my_turn:     data.is_my_turn ?? false,
-      current_player: data.current_player ?? (this.state.my_role === 'player1' ? 'player2' : 'player1'),
-      rematch_sq:     data.rematch_pending ? data.rematch_pending.sq : null,
+      board:             data.board,
+      traps:             data.traps ?? this.state.traps ?? {},
+      turn:              data.turn,
+      status:            data.status,
+      is_my_turn:        data.is_my_turn ?? false,
+      current_player:    data.current_player ?? (this.state.my_role === 'player1' ? 'player2' : 'player1'),
+      rematch_sq:        data.rematch_pending ? data.rematch_pending.sq : null,
+      skill_opportunity: data.skill_opportunity ?? null,
     };
 
     this.skillMode    = null;
     this.skillTargets = [];
-
-    // 再移動ペンディング中: その駒を自動選択
-    if (this.state.rematch_sq) {
-      this.selected   = this.state.rematch_sq;
-      this.legalMoves = Chess.getLegalMoves(this.state.board, this.state.rematch_sq, this.state.traps || {});
-    } else {
-      this.selected   = null;
-      this.legalMoves = [];
-    }
-
+    this._syncPendingSelection();
     this.render();
 
     if (data.status === 'finished') {
@@ -250,6 +251,9 @@ class BoardController {
 
   onCellClick(sq) {
     if (!this.state || !this.state.is_my_turn) return;
+
+    // ─ スキル機会中は移動不可 ─
+    if (this.state.skill_opportunity) return;
 
     // ─ スキルターゲット選択モード ─
     if (this.skillMode) {
@@ -330,7 +334,7 @@ class BoardController {
 
       case SKILL.TRAP:
         this.enterSkillTargetMode(SKILL_MODE.TRAP, from, skillId,
-          Chess.getTrapTargets(this.state.board));
+          Chess.getTrapTargets(this.state.board, from));
         break;
 
       case SKILL.REMATCH:
@@ -398,10 +402,17 @@ class BoardController {
     if (s.is_my_turn) {
       this.$myBar.classList.add('active');
       this.$oppBar.classList.remove('active');
-      this.$banner.textContent = s.rematch_sq
-        ? '再移動：同じ駒をもう一度動かせます'
-        : 'あなたの番です';
-      this.$banner.className = 'turn-banner my-turn' + (s.rematch_sq ? ' rematch' : '');
+      let bannerText = 'あなたの番です';
+      let bannerClass = 'turn-banner my-turn';
+      if (s.rematch_sq) {
+        bannerText  = '再移動：同じ駒をもう一度動かせます';
+        bannerClass += ' rematch';
+      } else if (s.skill_opportunity) {
+        bannerText  = 'スキル発動機会：発動またはスキップ';
+        bannerClass += ' opportunity';
+      }
+      this.$banner.textContent = bannerText;
+      this.$banner.className   = bannerClass;
     } else {
       this.$oppBar.classList.add('active');
       this.$myBar.classList.remove('active');
@@ -413,6 +424,8 @@ class BoardController {
     if (!this.skillMode) {
       if (s.rematch_sq && s.board[s.rematch_sq]) {
         this.renderPiecePanel(s.rematch_sq, s.board[s.rematch_sq]);
+      } else if (s.skill_opportunity) {
+        this.renderSkillOpportunityPanel(s.skill_opportunity);
       } else {
         this.renderPiecePanel(null, null);
       }
@@ -574,6 +587,62 @@ class BoardController {
         this.onSkillClick(from, skillId);
       });
     });
+  }
+
+  renderSkillOpportunityPanel(opportunity) {
+    const sq          = opportunity.sq;
+    const piece       = this.state.board[sq];
+    const skillMaster = this.state.skill_master || {};
+    const sk          = skillMaster[opportunity.skill_id];
+
+    if (!piece) { this.renderPiecePanel(null, null); return; }
+
+    this.$piecePanel.className = 'piece-panel skill-opportunity-panel';
+    this.$piecePanel.innerHTML = `
+      <div class="piece-panel-inner">
+        <div class="opportunity-label">スキル発動機会</div>
+        <div class="piece-panel-header">
+          <span class="piece-icon">${PIECE_SYMBOLS[piece.color][piece.piece]}</span>
+          <div class="piece-info">
+            <div class="piece-name">${PIECE_NAMES_JA[piece.piece]}（${sq}）</div>
+            <div class="piece-hint">移動後スキルを発動できます</div>
+          </div>
+        </div>
+        <div class="skill-row active-skill">
+          <span class="skill-type-badge active-badge">A</span>
+          <div class="skill-detail">
+            <div class="skill-name">${sk?.name ?? ''}</div>
+            <div class="skill-desc">${sk?.description ?? ''}</div>
+          </div>
+          <button class="skill-btn" id="opp-activate-btn">発動</button>
+        </div>
+        <button class="skip-btn" id="opp-skip-btn">スキップ（ターン終了）</button>
+      </div>
+    `;
+
+    document.getElementById('opp-activate-btn').addEventListener('click', () => {
+      this.onSkillClick(sq, opportunity.skill_id);
+    });
+    document.getElementById('opp-skip-btn').addEventListener('click', () => {
+      this.skipSkillOpportunity();
+    });
+  }
+
+  async skipSkillOpportunity() {
+    this.stopAll();
+    try {
+      const res = await fetch(`${API_BASE}/skill.php`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ match_id: this.matchId, user_id: this.userId, from: '', skill_id: 0 }),
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || 'スキップに失敗しました'); this.startPollingOrTimer(); return; }
+      this._applyServerResponse(data);
+    } catch (e) {
+      console.error('スキップ失敗:', e);
+      this.startPollingOrTimer();
+    }
   }
 
   showResult(data) {

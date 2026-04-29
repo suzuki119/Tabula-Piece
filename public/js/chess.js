@@ -187,10 +187,22 @@ function getEnhanceTargets(board, from, color) {
   });
 }
 
-// ─── トラップ設置の候補（空きマス）──────────────────────────
+// ─── トラップ設置の候補（隣接する空きマスのみ）──────────────
 
-function getTrapTargets(board) {
-  return getTeleportTargets(board); // 空きマスならどこでも
+function getTrapTargets(board, from) {
+  const c = colIdx(from);
+  const r = rowNum(from);
+  const targets = [];
+  for (let dc = -1; dc <= 1; dc++) {
+    for (let dr = -1; dr <= 1; dr++) {
+      if (dc === 0 && dr === 0) continue;
+      const nc = c + dc, nr = r + dr;
+      if (!inBounds(nc, nr)) continue;
+      const sq = toSq(nc, nr);
+      if (!board[sq]) targets.push(sq);
+    }
+  }
+  return targets;
 }
 
 // ─── エクスポート（ブラウザ / Node.js 両対応）────────────────
@@ -200,7 +212,7 @@ const Chess = {
   makePiece, createInitialBoard,
   getLegalMoves, getPseudoMoves,
   calcPoints, hasKing, isAdjacent,
-  getTeleportTargets, getEnhanceTargets, getTrapTargets,
+  getTeleportTargets, getEnhanceTargets, getTrapTargets, isAdjacent,
 };
 
 if (typeof module !== 'undefined' && module.exports) {

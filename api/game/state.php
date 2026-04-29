@@ -36,16 +36,19 @@ $stmt->execute([$matchId]);
 $bs = $stmt->fetch();
 if (!$bs) jsonError(500, '盤面データが見つかりません');
 
-$gameData = Chess::decodeGameData($bs['board_json']);
-$board    = $gameData['board'];
-$traps    = $gameData['traps'];
-$rematch  = $gameData['rematchPending'];
+$gameData    = Chess::decodeGameData($bs['board_json']);
+$board       = $gameData['board'];
+$traps       = $gameData['traps'];
+$rematch     = $gameData['rematchPending'];
+$opportunity = $gameData['skillOpportunity'];
 
-// 手番判定（再移動ペンディング中も自分の手番）
+// 手番判定（再移動・スキル機会ペンディング中も自分の手番）
 $isMyTurn = false;
 if ($match['current_player'] === $myRole) {
     $isMyTurn = true;
 } elseif ($rematch && $rematch['player'] === $myRole) {
+    $isMyTurn = true;
+} elseif ($opportunity && $opportunity['player'] === $myRole) {
     $isMyTurn = true;
 }
 
@@ -53,6 +56,12 @@ if ($match['current_player'] === $myRole) {
 $myRematchSq = null;
 if ($rematch && $rematch['player'] === $myRole) {
     $myRematchSq = $rematch['sq'];
+}
+
+// スキル機会が自分のものか
+$myOpportunity = null;
+if ($opportunity && $opportunity['player'] === $myRole) {
+    $myOpportunity = $opportunity;
 }
 
 // 相手・自分のプレイヤー名
@@ -87,7 +96,8 @@ echo json_encode([
     'winner'          => $match['winner_id'],
     'end_reason'      => $match['end_reason'],
     'board'           => $board,
-    'traps'           => $visibleTraps,    // 自分のトラップのみ
-    'rematch_sq'      => $myRematchSq,     // 再移動待機中のマス（自分の場合のみ）
-    'skill_master'    => $skillMaster,     // スキルマスターデータ
+    'traps'            => $visibleTraps,    // 自分のトラップのみ
+    'rematch_sq'       => $myRematchSq,    // 再移動待機中のマス（自分の場合のみ）
+    'skill_opportunity'=> $myOpportunity,  // スキル機会（自分の場合のみ）
+    'skill_master'     => $skillMaster,    // スキルマスターデータ
 ]);

@@ -25,10 +25,10 @@ $matchId  = (int)($body['match_id']  ?? 0);
 $userId   = (int)($body['user_id']   ?? 0);
 $fromSq   = trim($body['from']       ?? '');
 $skillId  = (int)($body['skill_id']  ?? 0);
-$targetSq = isset($body['target']) ? trim($body['target']) : null;
+$targetSq = isset($body['target']) && $body['target'] !== '' ? trim($body['target']) : null;
 
-if (!$matchId || !$userId || !$fromSq || !$skillId) {
-    jsonError(400, 'match_id, user_id, from, skill_id は必須です');
+if (!$matchId || !$userId) {
+    jsonError(400, 'match_id, user_id は必須です');
 }
 
 // ─── 試合情報取得 ────────────────────────────────────────────
@@ -54,21 +54,71 @@ if (!$bs) jsonError(500, '盤面データが見つかりません');
 $gameData = Chess::decodeGameData($bs['board_json']);
 
 $state = [
-    'board'          => $gameData['board'],
-    'traps'          => $gameData['traps'],
-    'rematchPending' => $gameData['rematchPending'],
-    'currentPlayer'  => $match['current_player'],
-    'turn'           => (int)$match['current_turn'],
-    'maxTurns'       => 30,
-    'status'         => $match['status'],
-    'winner'         => null,
-    'endReason'      => null,
+    'board'            => $gameData['board'],
+    'traps'            => $gameData['traps'],
+    'rematchPending'   => $gameData['rematchPending'],
+    'skillOpportunity' => $gameData['skillOpportunity'],
+    'currentPlayer'    => $match['current_player'],
+    'turn'             => (int)$match['current_turn'],
+    'maxTurns'         => 30,
+    'status'           => $match['status'],
+    'winner'           => null,
+    'endReason'        => null,
 ];
+
+// ─── スキップ（skill_id = 0）────────────────────────────────
+
+if ($skillId === 0) {
+    $opportunity = $state['skillOpportunity'] ?? null;
+    if (!$opportunity || $opportunity['player'] !== $player) {
+        jsonError(422, 'スキップできるスキル機会がありません');
+    }
+
+    $opponentPlayer = $player === 'player1' ? 'player2' : 'player1';
+    $nextTurn       = ($player === 'player2') ? $state['turn'] + 1 : $state['turn'];
+
+    $newState = array_merge($state, [
+        'currentPlayer'    => $opponentPlayer,
+        'turn'             => $nextTurn,
+        'skillOpportunity' => null,
+    ]);
+
+    $db->beginTransaction();
+    try {
+        $ins = $db->prepare('INSERT INTO board_states (match_id, turn, board_json) VALUES (?, ?, ?)');
+        $ins->execute([$matchId, $newState['turn'], Chess::encodeGameData($newState)]);
+
+        $upd = $db->prepare('UPDATE matches SET current_turn=?, current_player=?, updated_at=NOW() WHERE id=?');
+        $upd->execute([$newState['turn'], $newState['currentPlayer'], $matchId]);
+
+        $db->commit();
+    } catch (Exception $e) {
+        $db->rollBack();
+        jsonError(500, 'DB更新に失敗しました: ' . $e->getMessage());
+    }
+
+    echo json_encode([
+        'success'          => true,
+        'skipped'          => true,
+        'turn'             => $newState['turn'],
+        'board'            => $newState['board'],
+        'traps'            => $newState['traps'],
+        'rematch_pending'  => null,
+        'skill_opportunity'=> null,
+        'current_player'   => $newState['currentPlayer'],
+        'is_my_turn'       => false,
+    ]);
+    exit;
+}
 
 // ─── スキル実行 ──────────────────────────────────────────────
 
+if (!$fromSq || !$skillId) {
+    jsonError(400, 'from, skill_id は必須です（スキップ以外）');
+}
+
 try {
-    $newState = Chess::executeSkill($state, $player, $fromSq, $skillId, $targetSq ?: null);
+    $newState = Chess::executeSkill($state, $player, $fromSq, $skillId, $targetSq);
 } catch (RuntimeException $e) {
     jsonError(422, $e->getMessage());
 }
@@ -77,26 +127,14 @@ try {
 
 $db->beginTransaction();
 try {
-    // board_states に新盤面を追記
-    $ins = $db->prepare(
-        'INSERT INTO board_states (match_id, turn, board_json) VALUES (?, ?, ?)'
-    );
-    $ins->execute([
-        $matchId,
-        $newState['turn'],
-        Chess::encodeGameData($newState),
-    ]);
+    $ins = $db->prepare('INSERT INTO board_states (match_id, turn, board_json) VALUES (?, ?, ?)');
+    $ins->execute([$matchId, $newState['turn'], Chess::encodeGameData($newState)]);
 
-    // matches を更新
-    $upd = $db->prepare(
-        'UPDATE matches SET current_turn=?, current_player=?, updated_at=NOW() WHERE id=?'
-    );
+    $upd = $db->prepare('UPDATE matches SET current_turn=?, current_player=?, updated_at=NOW() WHERE id=?');
     $upd->execute([$newState['turn'], $newState['currentPlayer'], $matchId]);
 
-    // skill_logs にスキル使用を記録
-    $log = $db->prepare(
-        'INSERT INTO skill_logs (match_id, turn, user_id, skill_id, target_square) VALUES (?, ?, ?, ?, ?)'
-    );
+    // skill_logs
+    $log = $db->prepare('INSERT INTO skill_logs (match_id, turn, user_id, skill_id, target_square) VALUES (?, ?, ?, ?, ?)');
     $log->execute([$matchId, $state['turn'], $userId, $skillId, $targetSq]);
 
     $db->commit();
@@ -110,12 +148,13 @@ try {
 $skillData = Chess::SKILL_DATA[$skillId] ?? null;
 
 echo json_encode([
-    'success'         => true,
-    'skill_name'      => $skillData['name'] ?? '',
-    'turn'            => $newState['turn'],
-    'board'           => $newState['board'],
-    'traps'           => $newState['traps'],
-    'rematch_pending' => $newState['rematchPending'],
-    'current_player'  => $newState['currentPlayer'],
-    'is_my_turn'      => $newState['currentPlayer'] === $player,
+    'success'          => true,
+    'skill_name'       => $skillData['name'] ?? '',
+    'turn'             => $newState['turn'],
+    'board'            => $newState['board'],
+    'traps'            => $newState['traps'],
+    'rematch_pending'  => $newState['rematchPending'],
+    'skill_opportunity'=> $newState['skillOpportunity'],
+    'current_player'   => $newState['currentPlayer'],
+    'is_my_turn'       => $newState['currentPlayer'] === $player,
 ]);

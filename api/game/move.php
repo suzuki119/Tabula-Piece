@@ -53,10 +53,11 @@ if (!$bs) jsonError(500, '盤面データが見つかりません');
 $gameData = Chess::decodeGameData($bs['board_json']);
 
 $state = [
-    'board'          => $gameData['board'],
-    'traps'          => $gameData['traps'],
-    'rematchPending' => $gameData['rematchPending'],
-    'currentPlayer'  => $match['current_player'],
+    'board'            => $gameData['board'],
+    'traps'            => $gameData['traps'],
+    'rematchPending'   => $gameData['rematchPending'],
+    'skillOpportunity' => $gameData['skillOpportunity'],
+    'currentPlayer'    => $match['current_player'],
     'turn'           => (int)$match['current_turn'],
     'maxTurns'       => 30,
     'status'         => $match['status'],
@@ -110,12 +111,15 @@ try {
 // ─── レスポンス ──────────────────────────────────────────────
 
 echo json_encode([
-    'success'        => true,
-    'turn'           => $newState['turn'],
-    'status'         => $newState['status'],
-    'winner'         => $newState['winner'],
-    'endReason'      => $newState['endReason'],
-    'board'          => $newState['board'],
-    'traps'          => $newState['traps'],
-    'rematch_pending'=> $newState['rematchPending'],
+    'success'          => true,
+    'turn'             => $newState['turn'],
+    'status'           => $newState['status'],
+    'winner'           => $newState['winner'],
+    'endReason'        => $newState['endReason'],
+    'board'            => $newState['board'],
+    'traps'            => $newState['traps'],
+    'rematch_pending'  => $newState['rematchPending'],
+    'skill_opportunity'=> $newState['skillOpportunity'],
+    'is_my_turn'       => $newState['currentPlayer'] === $player,
+    'current_player'   => $newState['currentPlayer'],
 ]);

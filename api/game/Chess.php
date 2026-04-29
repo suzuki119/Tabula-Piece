@@ -119,9 +119,10 @@ class Chess {
 
     public static function encodeGameData(array $state): string {
         return json_encode([
-            'squares'         => $state['board'],
-            'traps'           => $state['traps'] ?? [],
-            'rematch_pending' => $state['rematchPending'] ?? null,
+            'squares'          => $state['board'],
+            'traps'            => $state['traps'] ?? [],
+            'rematch_pending'  => $state['rematchPending'] ?? null,
+            'skill_opportunity'=> $state['skillOpportunity'] ?? null,
         ]);
     }
 
@@ -130,16 +131,34 @@ class Chess {
         // 旧フォーマット（フラットな squares）との互換
         if (isset($data['squares'])) {
             return [
-                'board'          => $data['squares'],
-                'traps'          => $data['traps'] ?? [],
-                'rematchPending' => $data['rematch_pending'] ?? null,
+                'board'            => $data['squares'],
+                'traps'            => $data['traps'] ?? [],
+                'rematchPending'   => $data['rematch_pending'] ?? null,
+                'skillOpportunity' => $data['skill_opportunity'] ?? null,
             ];
         }
         return [
-            'board'          => $data,
-            'traps'          => [],
-            'rematchPending' => null,
+            'board'            => $data,
+            'traps'            => [],
+            'rematchPending'   => null,
+            'skillOpportunity' => null,
         ];
+    }
+
+    // ─── 移動後スキル機会チェック ─────────────────────────────
+
+    public static function checkSkillOpportunity(array $board, string $sq, string $player): ?array {
+        $piece = $board[$sq] ?? null;
+        if (!$piece) return null;
+
+        $skillId = $piece['active_skill_id'] ?? null;
+        if ($skillId === null) return null;
+
+        $used    = (int)($piece['active_used'] ?? 0);
+        $maxUses = self::SKILL_MAX_USES[$skillId] ?? null;
+        if ($maxUses !== null && $used >= $maxUses) return null;
+
+        return ['player' => $player, 'sq' => $sq, 'skill_id' => $skillId];
     }
 
     // ─── 疑似合法手生成 ──────────────────────────────────────
@@ -298,14 +317,28 @@ class Chess {
             return ['valid' => false, 'reason' => '試合は終了しています'];
         }
 
-        // 再移動ペンディング中はスキル発動不可
-        $rematch = $state['rematchPending'] ?? null;
-        if ($rematch) {
-            return ['valid' => false, 'reason' => '再移動が保留中です。移動を行ってください'];
-        }
+        $opportunity = $state['skillOpportunity'] ?? null;
 
-        if ($state['currentPlayer'] !== $player) {
-            return ['valid' => false, 'reason' => 'あなたのターンではありません'];
+        if ($opportunity) {
+            // スキル機会モード: そのプレイヤー・駒・スキルのみ許可
+            if ($opportunity['player'] !== $player) {
+                return ['valid' => false, 'reason' => 'あなたのターンではありません'];
+            }
+            if ($opportunity['sq'] !== $from) {
+                return ['valid' => false, 'reason' => 'スキル機会の駒のみ発動できます'];
+            }
+            if ($opportunity['skill_id'] !== $skillId) {
+                return ['valid' => false, 'reason' => 'そのスキルは今発動できません'];
+            }
+        } else {
+            // 通常モード
+            $rematch = $state['rematchPending'] ?? null;
+            if ($rematch) {
+                return ['valid' => false, 'reason' => '再移動が保留中です。移動を行ってください'];
+            }
+            if ($state['currentPlayer'] !== $player) {
+                return ['valid' => false, 'reason' => 'あなたのターンではありません'];
+            }
         }
 
         $board = $state['board'];
@@ -373,6 +406,7 @@ class Chess {
 
             case self::SKILL_TRAP:
                 if (!$target) throw new RuntimeException('トラップを置くマスを指定してください');
+                if (!self::isAdjacent($from, $target)) throw new RuntimeException('トラップは隣接するマスにのみ設置できます');
                 if (isset($board[$target])) throw new RuntimeException('駒のあるマスにはトラップを置けません');
                 $traps[$target] = $color;
                 $board[$from]['active_used']++;
@@ -395,11 +429,12 @@ class Chess {
                         : $state['turn'];
 
         return array_merge($state, [
-            'board'          => $board,
-            'traps'          => $traps,
-            'currentPlayer'  => $nextPlayer,
-            'turn'           => $nextTurn,
-            'rematchPending' => $rematchPending,
+            'board'            => $board,
+            'traps'            => $traps,
+            'currentPlayer'    => $nextPlayer,
+            'turn'             => $nextTurn,
+            'rematchPending'   => $rematchPending,
+            'skillOpportunity' => null,  // スキル発動でスキル機会は常に解消
         ]);
     }
 
@@ -408,6 +443,12 @@ class Chess {
     public static function validateMove(array $state, string $player, string $from, string $to): array {
         if ($state['status'] !== 'in_progress') {
             return ['valid' => false, 'reason' => '試合は終了しています'];
+        }
+
+        // スキル機会中は移動不可（発動かスキップのみ）
+        $opportunity = $state['skillOpportunity'] ?? null;
+        if ($opportunity && $opportunity['player'] === $player) {
+            return ['valid' => false, 'reason' => 'スキルを発動するかスキップしてください'];
         }
 
         $rematch = $state['rematchPending'] ?? null;
@@ -481,15 +522,41 @@ class Chess {
             else                     $winner = 'draw';
         }
 
+        // 移動後スキル機会チェック（再移動・試合終了時は除く）
+        $skillOpportunity = null;
+        if ($status === 'in_progress' && !$isRematch) {
+            $movedPiece = $newBoard[$to] ?? null;
+            // 自分の駒が $to に移動した場合のみ（シールドで弾かれた場合は移動していない）
+            if ($movedPiece && $movedPiece['color'] === ($player === 'player1' ? 'white' : 'black')) {
+                $skillOpportunity = self::checkSkillOpportunity($newBoard, $to, $player);
+            }
+        }
+
+        // スキル機会がある場合: ターンを進めず待機
+        if ($skillOpportunity) {
+            return array_merge($state, [
+                'board'            => $newBoard,
+                'traps'            => $traps,
+                'currentPlayer'    => $player,
+                'turn'             => $state['turn'],
+                'status'           => $status,
+                'winner'           => $winner,
+                'endReason'        => $endReason,
+                'rematchPending'   => null,
+                'skillOpportunity' => $skillOpportunity,
+            ]);
+        }
+
         return array_merge($state, [
-            'board'          => $newBoard,
-            'traps'          => $traps,
-            'currentPlayer'  => $status === 'finished' ? null : $opponentPlayer,
-            'turn'           => $nextTurn,
-            'status'         => $status,
-            'winner'         => $winner,
-            'endReason'      => $endReason,
-            'rematchPending' => null,
+            'board'            => $newBoard,
+            'traps'            => $traps,
+            'currentPlayer'    => $status === 'finished' ? null : $opponentPlayer,
+            'turn'             => $nextTurn,
+            'status'           => $status,
+            'winner'           => $winner,
+            'endReason'        => $endReason,
+            'rematchPending'   => null,
+            'skillOpportunity' => null,
         ]);
     }
 
