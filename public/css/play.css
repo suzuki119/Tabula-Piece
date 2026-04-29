@@ -1,0 +1,170 @@
+/* play.css — マッチング画面・ホーム画面スタイル */
+
+.play-container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 8px 0;
+}
+
+/* ─── モード選択カード ───────────────────────────────── */
+.mode-deck-info {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.mode-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mode-card {
+  background: var(--bg-panel);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+  width: 100%;
+}
+.mode-card:hover { border-color: var(--accent-soft); background: rgba(255,255,255,0.03); }
+
+.mode-icon { font-size: 32px; flex-shrink: 0; }
+.mode-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.mode-desc  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* ─── 待機・情報カード ───────────────────────────────── */
+.info-card {
+  background: var(--bg-panel);
+  border-radius: var(--radius);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow);
+}
+
+.info-icon { font-size: 48px; }
+.info-text  { font-size: 18px; font-weight: 700; }
+.info-sub   { font-size: 13px; color: var(--text-muted); text-align: center; }
+.info-error { font-size: 13px; color: var(--accent); min-height: 18px; }
+
+/* ─── スピナー ───────────────────────────────────────── */
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── ルームコード表示 ───────────────────────────────── */
+.room-code {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: 8px;
+  color: var(--gold);
+  text-align: center;
+}
+
+/* ─── ルームコード入力 ───────────────────────────────── */
+.room-code-input {
+  background: var(--bg-card);
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  text-align: center;
+  width: 220px;
+  padding: 12px 8px;
+  outline: none;
+  text-transform: uppercase;
+}
+.room-code-input:focus { border-color: var(--accent); }
+
+/* ─── ホーム画面 ─────────────────────────────────────── */
+.home-section {
+  max-width: 480px;
+  margin: 0 auto 20px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.quick-play-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 18px;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.quick-play-btn:hover { background: var(--accent-soft); }
+.quick-play-icon { font-size: 24px; }
+
+.match-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-panel);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+.match-card:hover { border-color: rgba(255,255,255,0.15); }
+
+.match-opponent {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.match-turn {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.turn-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.turn-badge.my-turn  { background: var(--accent);  color: #fff; }
+.turn-badge.opp-turn { background: rgba(255,255,255,0.1); color: var(--text-muted); }
+.turn-badge.win      { background: #2ecc71; color: #fff; }
+.turn-badge.loss     { background: var(--bg-card); color: var(--text-muted); }
+.turn-badge.draw     { background: rgba(255,255,255,0.1); color: var(--text-muted); }
+
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 24px;
+}

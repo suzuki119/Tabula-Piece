@@ -61,6 +61,14 @@ class BoardController {
     this.$resultIcon  = document.getElementById('result-icon');
     this.$resultTitle = document.getElementById('result-title');
     this.$resultReason= document.getElementById('result-reason');
+
+    // ホームリンクに user_id を付加
+    const homeBtn = document.getElementById('home-btn');
+    if (homeBtn) homeBtn.href = `home.html?user_id=${this.userId}`;
+
+    // 降参ボタン
+    const surrenderBtn = document.getElementById('surrender-btn');
+    if (surrenderBtn) surrenderBtn.addEventListener('click', () => this.surrender());
   }
 
   // ─── 起動 ────────────────────────────────────────────────
@@ -642,6 +650,22 @@ class BoardController {
     } catch (e) {
       console.error('スキップ失敗:', e);
       this.startPollingOrTimer();
+    }
+  }
+
+  async surrender() {
+    if (!confirm('本当に降参しますか？')) return;
+    try {
+      const res  = await fetch(`${API_BASE}/../matches/surrender.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ match_id: this.matchId, user_id: this.userId }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      this.showResult({ winner_id: data.winner_id, end_reason: 'checkmate' });
+    } catch (e) {
+      alert('降参処理に失敗しました: ' + e.message);
     }
   }
 

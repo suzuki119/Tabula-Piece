@@ -62,9 +62,12 @@
       <div class="player-name" id="my-name">あなた</div>
       <div class="player-color" id="my-color">白</div>
     </div>
-    <div class="player-score">
-      <div class="score-value" id="my-score">0</div>
-      <div class="score-label">ポイント</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="player-score">
+        <div class="score-value" id="my-score">0</div>
+        <div class="score-label">ポイント</div>
+      </div>
+      <button class="surrender-btn" id="surrender-btn">降参</button>
     </div>
   </div>
 
@@ -97,7 +100,7 @@
     <div class="result-icon" id="result-icon">🏆</div>
     <div class="result-title" id="result-title">勝利！</div>
     <div class="result-reason" id="result-reason"></div>
-    <a href="/" class="btn">ホームへ戻る</a>
+    <a href="#" id="home-btn" class="btn">ホームへ戻る</a>
   </div>
 </div>
 

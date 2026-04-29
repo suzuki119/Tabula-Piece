@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ホーム — Tabula-Piece</title>
+  <link rel="stylesheet" href="css/deck.css">
+  <link rel="stylesheet" href="css/play.css">
+  <link rel="stylesheet" href="css/home.css">
+</head>
+<body>
+
+<header class="page-header">
+  <div class="page-title">Tabula-Piece</div>
+  <nav class="nav-links">
+    <a href="gacha.html">ガチャ</a>
+    <a href="decks.html">デッキ</a>
+    <a href="characters.html">キャラ</a>
+  </nav>
+</header>
+
+<!-- クイックアクション -->
+<div class="home-section">
+  <a class="quick-play-btn" href="decks.html">
+    <span class="quick-play-icon">⚔️</span>
+    <span>対戦する</span>
+  </a>
+</div>
+
+<!-- 進行中の試合 -->
+<div class="home-section">
+  <div class="section-title">進行中の対戦</div>
+  <div id="matches-list">
+    <div class="loading">読み込み中…</div>
+  </div>
+</div>
+
+<!-- 終了した試合 -->
+<div class="home-section" id="finished-section" style="display:none">
+  <div class="section-title">最近の結果</div>
+  <div id="finished-list"></div>
+</div>
+
+<script src="js/home.js"></script>
+</body>
+</html>

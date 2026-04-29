@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>対戦開始 — Tabula-Piece</title>
+  <link rel="stylesheet" href="css/deck.css">
+  <link rel="stylesheet" href="css/play.css">
+</head>
+<body>
+
+<header class="page-header">
+  <div class="page-title">対戦開始</div>
+  <nav class="nav-links">
+    <a href="home.html">ホーム</a>
+    <a href="decks.html">デッキ</a>
+  </nav>
+</header>
+
+<!-- デッキ未選択エラー -->
+<div class="play-container" id="no-deck" style="display:none">
+  <div class="info-card">
+    <div class="info-icon">⚠️</div>
+    <div class="info-text">デッキが選択されていません</div>
+    <a class="btn" href="decks.html">デッキを編成する</a>
+  </div>
+</div>
+
+<!-- モード選択 -->
+<div class="play-container" id="mode-select">
+  <div class="mode-deck-info" id="deck-info">デッキ読み込み中…</div>
+
+  <div class="mode-cards">
+    <button class="mode-card" id="btn-online">
+      <div class="mode-icon">🌐</div>
+      <div class="mode-title">オンラインマッチ</div>
+      <div class="mode-desc">ランダムな相手とマッチング</div>
+    </button>
+    <button class="mode-card" id="btn-room-create">
+      <div class="mode-icon">🏠</div>
+      <div class="mode-title">ルームを作る</div>
+      <div class="mode-desc">コードを共有して友達と対戦</div>
+    </button>
+    <button class="mode-card" id="btn-room-join">
+      <div class="mode-icon">🚪</div>
+      <div class="mode-title">ルームに入る</div>
+      <div class="mode-desc">ルームコードを入力して参加</div>
+    </button>
+  </div>
+</div>
+
+<!-- マッチング待機中（オンライン） -->
+<div class="play-container" id="state-online" style="display:none">
+  <div class="info-card">
+    <div class="spinner"></div>
+    <div class="info-text">マッチング中…</div>
+    <div class="info-sub" id="online-status">相手を探しています</div>
+    <button class="btn btn-ghost" id="btn-cancel-online">キャンセル</button>
+  </div>
+</div>
+
+<!-- ルーム作成待機中 -->
+<div class="play-container" id="state-room-host" style="display:none">
+  <div class="info-card">
+    <div class="info-text">ルームコード</div>
+    <div class="room-code" id="room-code-display">——</div>
+    <div class="info-sub">このコードを相手に伝えてください</div>
+    <div class="spinner"></div>
+    <div class="info-sub">相手の参加を待っています…</div>
+    <button class="btn btn-ghost" id="btn-cancel-room">キャンセル</button>
+  </div>
+</div>
+
+<!-- ルーム参加入力 -->
+<div class="play-container" id="state-room-join" style="display:none">
+  <div class="info-card">
+    <div class="info-text">ルームコードを入力</div>
+    <input type="text" class="room-code-input" id="room-code-input"
+           maxlength="6" placeholder="XXXXXX" autocomplete="off">
+    <div class="info-error" id="join-error"></div>
+    <button class="btn" id="btn-do-join">参加する</button>
+    <button class="btn btn-ghost" id="btn-cancel-join">戻る</button>
+  </div>
+</div>
+
+<script src="js/play.js"></script>
+</body>
+</html>

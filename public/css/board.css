@@ -544,3 +544,19 @@ body {
   transform: translateX(-50%) translateY(0);
   opacity: 1;
 }
+
+/* ─── 降参ボタン ─────────────────────────────────────────── */
+.surrender-btn {
+  background: transparent;
+  border: 1px solid rgba(233,69,96,0.4);
+  color: rgba(233,69,96,0.7);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.surrender-btn:hover {
+  background: rgba(233,69,96,0.15);
+  color: var(--accent);
+}
