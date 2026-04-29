@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>デッキ編成 — Tabula-Piece</title>
+  <link rel="stylesheet" href="css/deck.css">
+</head>
+<body>
+
+<header class="page-header">
+  <div class="page-title">デッキ編成</div>
+  <nav class="nav-links">
+    <a href="characters.html">キャラクター</a>
+  </nav>
+</header>
+
+<div class="deck-container">
+
+  <!-- デッキ名 -->
+  <div class="deck-name-row">
+    <span class="deck-name-label">デッキ名</span>
+    <input type="text" class="deck-name-input" id="deck-name" value="マイデッキ" maxlength="24">
+  </div>
+
+  <!-- スロット一覧 -->
+  <div class="deck-slots" id="deck-slots">
+    <!-- deck.js で生成 -->
+  </div>
+
+  <!-- アクションボタン -->
+  <div class="deck-actions">
+    <button class="btn btn-ghost" id="btn-save">保存</button>
+    <button class="btn btn-gold" id="btn-start">対戦開始</button>
+  </div>
+
+</div>
+
+<!-- キャラクター選択モーダル（ボトムシート） -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-sheet">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">キャラクターを選択</div>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <!-- deck.js で生成 -->
+    </div>
+  </div>
+</div>
+
+<script src="js/decks.js"></script>
+</body>
+</html>

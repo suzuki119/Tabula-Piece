@@ -145,6 +145,43 @@ class Chess {
         ];
     }
 
+    // ─── デッキを盤面に適用 ──────────────────────────────────
+    // $deck = ['pawn' => charId, 'knight' => charId, ...]
+    // $chars = [charId => ['active_skill_id' => ..., 'passive_skill_id' => ...]]
+
+    public static function applyDeckToBoard(array $board, array $deck, array $chars, string $color): array {
+        $backRow = $color === 'white' ? 1 : 6;
+        $pawnRow = $color === 'white' ? 2 : 5;
+        $colMap  = ['rook' => 'a', 'knight' => 'b', 'bishop' => 'c', 'queen' => 'd', 'king' => 'e'];
+
+        foreach ($colMap as $class => $col) {
+            $charId = $deck[$class] ?? null;
+            if (!$charId || !isset($chars[$charId])) continue;
+            $ch = $chars[$charId];
+            $sq = $col . $backRow;
+            if (isset($board[$sq])) {
+                $board[$sq]['character_id']     = $charId;
+                $board[$sq]['active_skill_id']  = $ch['active_skill_id'];
+                $board[$sq]['passive_skill_id'] = $ch['passive_skill_id'];
+            }
+        }
+
+        $pawnCharId = $deck['pawn'] ?? null;
+        if ($pawnCharId && isset($chars[$pawnCharId])) {
+            $ch = $chars[$pawnCharId];
+            foreach (self::COLS as $col) {
+                $sq = $col . $pawnRow;
+                if (isset($board[$sq])) {
+                    $board[$sq]['character_id']     = $pawnCharId;
+                    $board[$sq]['active_skill_id']  = $ch['active_skill_id'];
+                    $board[$sq]['passive_skill_id'] = $ch['passive_skill_id'];
+                }
+            }
+        }
+
+        return $board;
+    }
+
     // ─── 移動後スキル機会チェック ─────────────────────────────
 
     public static function checkSkillOpportunity(array $board, string $sq, string $player): ?array {
