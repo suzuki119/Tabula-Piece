@@ -1,0 +1,79 @@
+/* ranking.css — ランキング画面 */
+
+.my-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.stat-card {
+  background: var(--bg-panel);
+  border-radius: var(--radius);
+  padding: 16px 8px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.win-color  { color: #4caf8a; }
+.loss-color { color: var(--accent); }
+.rate-color { color: var(--gold); }
+
+/* ─── ランキングテーブル ─────────────────────────────── */
+.ranking-table {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.ranking-table th {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 8px 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  font-weight: 600;
+}
+
+.ranking-table td {
+  text-align: center;
+  padding: 12px 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: middle;
+}
+
+.ranking-table .rank-col { width: 48px; font-size: 18px; }
+.ranking-table .name-col { text-align: left; padding-left: 12px; }
+
+.my-row {
+  background: rgba(233,69,96,0.08);
+}
+.my-row td { color: var(--text-primary); }
+
+.me-badge {
+  font-size: 10px;
+  background: var(--accent);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+@media (max-width: 360px) {
+  .my-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}

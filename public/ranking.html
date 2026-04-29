@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ランキング — Tabula-Piece</title>
+  <link rel="stylesheet" href="css/deck.css">
+  <link rel="stylesheet" href="css/play.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/ranking.css">
+</head>
+<body>
+
+<header class="page-header">
+  <div class="page-title">ランキング</div>
+  <nav class="nav-links">
+    <a href="home.html">ホーム</a>
+    <span id="user-name" class="nav-user"></span>
+    <button id="logout-btn" class="nav-logout">ログアウト</button>
+  </nav>
+</header>
+
+<!-- 自分の戦績 -->
+<div class="home-section">
+  <div class="section-title">あなたの戦績</div>
+  <div class="my-stats-grid" id="my-stats">
+    <div class="loading">読み込み中…</div>
+  </div>
+</div>
+
+<!-- ランキング表 -->
+<div class="home-section">
+  <div class="section-title">ランキング</div>
+  <div id="ranking-list">
+    <div class="loading">読み込み中…</div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/ranking.js"></script>
+</body>
+</html>
