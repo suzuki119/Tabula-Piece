@@ -1,13 +1,12 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST')    { http_response_code(405); echo json_encode(['error' => 'Method Not Allowed']); exit; }
 
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../game/Chess.php';
 
 function jsonError(int $code, string $msg): void {
@@ -16,14 +15,15 @@ function jsonError(int $code, string $msg): void {
     exit;
 }
 
+$userId = requireAuth();
+
 $body = json_decode(file_get_contents('php://input'), true);
 if (!$body) jsonError(400, 'リクエストボディが不正です');
 
-$userId     = (int)($body['user_id']          ?? 0);
 $deckId     = (int)($body['deck_id']          ?? 0);
 $opponentId = (int)($body['opponent_user_id'] ?? 0);
 
-if (!$userId || !$deckId) jsonError(400, 'user_id と deck_id は必須です');
+if (!$deckId) jsonError(400, 'deck_id は必須です');
 
 $db = getDb();
 
@@ -115,8 +115,8 @@ try {
 }
 
 echo json_encode([
-    'success'      => true,
-    'match_id'     => $matchId,
-    'player1_url'  => "../match.html?id={$matchId}&user_id={$userId}",
-    'player2_url'  => "../match.html?id={$matchId}&user_id={$opponentId}",
+    'success'    => true,
+    'match_id'   => $matchId,
+    'player1_url'=> "../match.html?id={$matchId}",
+    'player2_url'=> "../match.html?id={$matchId}",
 ]);

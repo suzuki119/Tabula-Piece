@@ -1,13 +1,12 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST')    { http_response_code(405); echo json_encode(['error' => 'Method Not Allowed']); exit; }
 
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../config/auth.php';
 
 function jsonError(int $code, string $msg): void {
     http_response_code($code);
@@ -31,11 +30,11 @@ function rollRarity(): string {
     return 'N';
 }
 
-$body   = json_decode(file_get_contents('php://input'), true);
-$userId = (int)($body['user_id'] ?? 0);
-$mode   = $body['mode'] ?? 'single'; // 'single' or 'multi'
+$userId = requireAuth();
 
-if (!$userId) jsonError(400, 'user_id は必須です');
+$body = json_decode(file_get_contents('php://input'), true);
+$mode = $body['mode'] ?? 'single'; // 'single' or 'multi'
+
 if (!in_array($mode, ['single', 'multi'])) jsonError(400, 'mode は single または multi です');
 
 $cost    = $mode === 'multi' ? COST_MULTI : COST_SINGLE;

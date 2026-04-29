@@ -1,8 +1,8 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
 
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../config/auth.php';
 
 function jsonError(int $code, string $msg): void {
     http_response_code($code);
@@ -10,8 +10,7 @@ function jsonError(int $code, string $msg): void {
     exit;
 }
 
-$userId = (int)($_GET['user_id'] ?? 0);
-if (!$userId) jsonError(400, 'user_id は必須です');
+$userId = requireAuth();
 
 $db = getDb();
 

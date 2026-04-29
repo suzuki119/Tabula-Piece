@@ -1,39 +1,32 @@
 /* play.js — マッチング画面 */
 
 const params  = new URLSearchParams(location.search);
-const USER_ID = parseInt(params.get('user_id'), 10) || 1;
 const DECK_ID = parseInt(params.get('deck_id'), 10) || 0;
 
 let pollTimer    = null;
 let currentMatchId = null;
 
-function applyUserIdToLinks() {
-  document.querySelectorAll('a[href]').forEach(a => {
-    const href = a.getAttribute('href');
-    if (href && !href.startsWith('http') && !href.includes('user_id=')) {
-      const sep = href.includes('?') ? '&' : '?';
-      a.setAttribute('href', `${href}${sep}user_id=${USER_ID}`);
-    }
-  });
-}
-
 /* ─── 初期化 ─────────────────────────────────────────── */
 async function init() {
-  applyUserIdToLinks();
+  const user = await requireLogin();
+  if (!user) return;
+
+  document.getElementById('user-name').textContent = user.name;
+
   if (!DECK_ID) {
     show('no-deck');
     hide('mode-select');
     return;
   }
 
-  // デッキ名を表示
   try {
-    const res  = await fetch(`../api/decks/list.php?user_id=${USER_ID}`);
+    const res  = await apiFetch('../api/decks/list.php');
+    if (!res) return;
     const data = await res.json();
     const deck = data.find(d => d.id === DECK_ID);
     document.getElementById('deck-info').textContent =
       deck ? `デッキ：${deck.name}` : `デッキID: ${DECK_ID}`;
-  } catch (_) { /* 無視 */ }
+  } catch (_) {}
 
   show('mode-select');
 
@@ -60,6 +53,11 @@ async function init() {
   codeInput.addEventListener('keydown', e => {
     if (e.key === 'Enter') doRoomJoin();
   });
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await fetch('../api/auth/logout.php', { method: 'POST', credentials: 'same-origin' });
+    location.href = 'login.html';
+  });
 }
 
 /* ─── オンラインマッチング ───────────────────────────── */
@@ -68,21 +66,21 @@ async function startOnline() {
   show('state-online');
 
   try {
-    const res  = await fetch('../api/matching/online.php', {
+    const res  = await apiFetch('../api/matching/online.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: USER_ID, deck_id: DECK_ID }),
+      body: JSON.stringify({ deck_id: DECK_ID }),
     });
+    if (!res) { showModeSelect(); return; }
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
     currentMatchId = data.match_id;
 
     if (data.status === 'matched') {
-      navigateToMatch(data.match_id, 'player2');
+      navigateToMatch(data.match_id);
     } else {
-      // 待機中 → ポーリング
-      pollStatus('online');
+      pollStatus();
     }
   } catch (e) {
     alert('エラー: ' + e.message);
@@ -96,17 +94,18 @@ async function startRoomCreate() {
   show('state-room-host');
 
   try {
-    const res  = await fetch('../api/matching/room_create.php', {
+    const res  = await apiFetch('../api/matching/room_create.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: USER_ID, deck_id: DECK_ID }),
+      body: JSON.stringify({ deck_id: DECK_ID }),
     });
+    if (!res) { showModeSelect(); return; }
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
     currentMatchId = data.match_id;
     document.getElementById('room-code-display').textContent = data.room_code;
-    pollStatus('room');
+    pollStatus();
   } catch (e) {
     alert('エラー: ' + e.message);
     showModeSelect();
@@ -129,15 +128,16 @@ async function doRoomJoin() {
   btn.textContent = '参加中…';
 
   try {
-    const res  = await fetch('../api/matching/room_join.php', {
+    const res  = await apiFetch('../api/matching/room_join.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: USER_ID, deck_id: DECK_ID, room_code: code }),
+      body: JSON.stringify({ deck_id: DECK_ID, room_code: code }),
     });
+    if (!res) { btn.disabled = false; btn.textContent = '参加する'; return; }
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
-    navigateToMatch(data.match_id, 'player2');
+    navigateToMatch(data.match_id);
   } catch (e) {
     errEl.textContent = e.message;
     btn.disabled = false;
@@ -146,17 +146,18 @@ async function doRoomJoin() {
 }
 
 /* ─── ポーリング ─────────────────────────────────────── */
-function pollStatus(mode) {
+function pollStatus() {
   clearPoll();
   pollTimer = setInterval(async () => {
     try {
-      const res  = await fetch(`../api/matching/status.php?match_id=${currentMatchId}&user_id=${USER_ID}`);
+      const res  = await apiFetch(`../api/matching/status.php?match_id=${currentMatchId}`);
+      if (!res) { clearPoll(); return; }
       const data = await res.json();
       if (data.status === 'in_progress') {
         clearPoll();
-        navigateToMatch(data.match_id, data.player_role ?? 'player1');
+        navigateToMatch(data.match_id);
       }
-    } catch (_) { /* 無視してリトライ */ }
+    } catch (_) {}
   }, 2500);
 }
 
@@ -165,9 +166,9 @@ function clearPoll() {
 }
 
 /* ─── ナビゲーション ─────────────────────────────────── */
-function navigateToMatch(matchId, role) {
+function navigateToMatch(matchId) {
   clearPoll();
-  location.href = `match.html?id=${matchId}&user_id=${USER_ID}`;
+  location.href = `match.html?id=${matchId}`;
 }
 
 function cancelAndGoHome() {

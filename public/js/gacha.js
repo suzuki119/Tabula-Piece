@@ -1,8 +1,5 @@
 /* gacha.js — ガチャ画面 */
 
-const params  = new URLSearchParams(location.search);
-const USER_ID = parseInt(params.get('user_id'), 10) || 1;
-
 const CLASS_ICON = {
   pawn: '♟', knight: '♞', bishop: '♝',
   rook: '♜', queen: '♛', king: '♚',
@@ -12,27 +9,27 @@ let currentResults = [];
 
 /* ─── 初期化 ─────────────────────────────────────────── */
 async function init() {
-  applyUserIdToLinks();
+  const user = await requireLogin();
+  if (!user) return;
+
+  document.getElementById('user-name').textContent = user.name;
   await loadInfo();
 
   document.getElementById('btn-single').addEventListener('click', () => pull('single'));
   document.getElementById('btn-multi').addEventListener('click',  () => pull('multi'));
   document.getElementById('btn-open').addEventListener('click',   openAll);
   document.getElementById('btn-again').addEventListener('click',  resetToTop);
-}
 
-function applyUserIdToLinks() {
-  document.querySelectorAll('a[href]').forEach(a => {
-    const href = a.getAttribute('href');
-    if (href && !href.startsWith('http') && !href.includes('user_id=')) {
-      a.setAttribute('href', `${href}${href.includes('?') ? '&' : '?'}user_id=${USER_ID}`);
-    }
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await fetch('../api/auth/logout.php', { method: 'POST', credentials: 'same-origin' });
+    location.href = 'login.html';
   });
 }
 
 async function loadInfo() {
   try {
-    const res  = await fetch(`../api/gacha/info.php?user_id=${USER_ID}`);
+    const res  = await apiFetch('../api/gacha/info.php');
+    if (!res) return;
     const data = await res.json();
     document.getElementById('stones-value').textContent = data.stones.toLocaleString();
     document.getElementById('owned-display').textContent = `${data.owned}/${data.total} 所持`;
@@ -55,18 +52,18 @@ async function pull(mode) {
   btn.classList.add('loading');
 
   try {
-    const res  = await fetch('../api/gacha/pull.php', {
+    const res  = await apiFetch('../api/gacha/pull.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: USER_ID, mode }),
+      body: JSON.stringify({ mode }),
     });
+    if (!res) { btn.classList.remove('loading'); return; }
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
     currentResults = data.results;
     showStage(data);
 
-    // 石残高を更新
     document.getElementById('stones-value').textContent =
       data.stones_remaining.toLocaleString();
     updateBtnState(data.stones_remaining);
@@ -110,15 +107,12 @@ function showStage(data) {
   });
 
   if (isSingle) {
-    // 1回: 即フリップ
     setTimeout(() => flipCard(0), 300);
     document.getElementById('btn-open').style.display = 'none';
   } else {
-    // 10連: まずカード裏面表示 → オープンボタン
     document.getElementById('btn-open').style.display = '';
   }
 
-  // 結果サマリー準備
   buildSummary(data);
 }
 
@@ -144,7 +138,6 @@ function openAll() {
     }, i * 120);
   });
 
-  // 全カード表示後にサマリー表示
   setTimeout(() => {
     document.getElementById('result-summary').style.display = '';
   }, cards.length * 120 + 600);
@@ -175,12 +168,10 @@ function buildSummary(data) {
     : '';
 }
 
-/* 演出後にガチャ画面に戻る */
 function resetToTop() {
   document.getElementById('gacha-stage').style.display   = 'none';
   document.getElementById('result-summary').style.display = 'none';
   document.getElementById('gacha-btns').style.display    = '';
-  // ボタン状態を再チェック
   loadInfo();
 }
 

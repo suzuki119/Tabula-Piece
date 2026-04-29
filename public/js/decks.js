@@ -1,8 +1,5 @@
 /* decks.js — デッキ編成画面 */
 
-const params  = new URLSearchParams(location.search);
-const USER_ID = parseInt(params.get('user_id'), 10) || 1;
-
 const CLASSES = ['pawn','knight','bishop','rook','queen','king'];
 
 const CLASS_LABEL = {
@@ -19,34 +16,29 @@ const CLASS_ICON = {
   rook: '♜', queen: '♛', king: '♚',
 };
 
-let allCharacters = [];  // 全所持キャラ
-let currentDeck   = {    // 編集中のスロット {class -> character|null}
+let allCharacters = [];
+let currentDeck   = {
   pawn: null, knight: null, bishop: null,
   rook: null, queen: null,  king: null,
 };
-let currentDeckId   = null;
-let activeSlot      = null; // モーダル表示中のクラス名
-
-function applyUserIdToLinks() {
-  document.querySelectorAll('a[href]').forEach(a => {
-    const href = a.getAttribute('href');
-    if (href && !href.startsWith('http') && !href.includes('user_id=')) {
-      const sep = href.includes('?') ? '&' : '?';
-      a.setAttribute('href', `${href}${sep}user_id=${USER_ID}`);
-    }
-  });
-}
+let currentDeckId = null;
+let activeSlot    = null;
 
 async function init() {
-  applyUserIdToLinks();
-  const [chars, decks] = await Promise.all([
-    fetch(`../api/characters/list.php?user_id=${USER_ID}`).then(r => r.json()),
-    fetch(`../api/decks/list.php?user_id=${USER_ID}`).then(r => r.json()),
+  const user = await requireLogin();
+  if (!user) return;
+
+  document.getElementById('user-name').textContent = user.name;
+
+  const [charsRes, decksRes] = await Promise.all([
+    apiFetch('../api/characters/list.php'),
+    apiFetch('../api/decks/list.php'),
   ]);
+  if (!charsRes || !decksRes) return;
 
-  allCharacters = chars;
+  allCharacters = await charsRes.json();
+  const decks   = await decksRes.json();
 
-  // 最初のデッキを読み込む（なければ空）
   if (decks && decks.length > 0) {
     const deck = decks[0];
     currentDeckId = deck.id;
@@ -59,6 +51,11 @@ async function init() {
   renderSlots();
   setupModal();
   setupButtons();
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await fetch('../api/auth/logout.php', { method: 'POST', credentials: 'same-origin' });
+    location.href = 'login.html';
+  });
 }
 
 /* ─── スロット描画 ──────────────────────────────────── */
@@ -181,11 +178,12 @@ async function saveDeck() {
   btn.disabled = true;
 
   try {
-    const res  = await fetch('../api/decks/save.php', {
+    const res  = await apiFetch('../api/decks/save.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: USER_ID, deck_id: currentDeckId, name, slots }),
+      body: JSON.stringify({ deck_id: currentDeckId, name, slots }),
     });
+    if (!res) { btn.textContent = '保存'; btn.disabled = false; return; }
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     currentDeckId = data.deck_id;
@@ -199,14 +197,11 @@ async function saveDeck() {
 }
 
 async function startMatch() {
-  // 未保存なら先に保存
   if (!currentDeckId) {
     await saveDeck();
     if (!currentDeckId) return;
   }
-
-  // マッチング画面へ（ユーザーID・デッキIDを渡す）
-  location.href = `play.html?user_id=${USER_ID}&deck_id=${currentDeckId}`;
+  location.href = `play.html?deck_id=${currentDeckId}`;
 }
 
 function esc(s) {

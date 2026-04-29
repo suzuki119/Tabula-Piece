@@ -1,13 +1,12 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST')    { http_response_code(405); echo json_encode(['error' => 'Method Not Allowed']); exit; }
 
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../game/match_starter.php';
 
 function jsonError(int $code, string $msg): void {
@@ -16,12 +15,12 @@ function jsonError(int $code, string $msg): void {
     exit;
 }
 
+$userId   = requireAuth();
 $body     = json_decode(file_get_contents('php://input'), true);
-$userId   = (int)($body['user_id']   ?? 0);
 $deckId   = (int)($body['deck_id']   ?? 0);
 $roomCode = strtoupper(trim($body['room_code'] ?? ''));
 
-if (!$userId || !$deckId || !$roomCode) jsonError(400, 'user_id・deck_id・room_code は必須です');
+if (!$deckId || !$roomCode) jsonError(400, 'deck_id・room_code は必須です');
 
 $db = getDb();
 

@@ -1,8 +1,5 @@
 /* characters.js — キャラクター一覧画面 */
 
-const params  = new URLSearchParams(location.search);
-const USER_ID = parseInt(params.get('user_id'), 10) || 1;
-
 const CLASS_LABEL = {
   pawn:   '♟ ポーン',
   knight: '♞ ナイト',
@@ -20,22 +17,28 @@ const CLASS_ICON = {
 let allCharacters = [];
 let activeFilter  = 'all';
 
-function applyUserIdToLinks() {
-  document.querySelectorAll('a[href]').forEach(a => {
-    const href = a.getAttribute('href');
-    if (href && !href.startsWith('http') && !href.includes('user_id=')) {
-      const sep = href.includes('?') ? '&' : '?';
-      a.setAttribute('href', `${href}${sep}user_id=${USER_ID}`);
-    }
-  });
-}
-
 async function init() {
-  applyUserIdToLinks();
-  const res  = await fetch(`../api/characters/list.php?user_id=${USER_ID}`);
+  const user = await requireLogin();
+  if (!user) return;
+
+  document.getElementById('user-name').textContent = user.name;
+
+  const res  = await apiFetch('../api/characters/list.php');
+  if (!res) return;
   allCharacters = await res.json();
   renderGrid();
   setupFilters();
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await fetch('../api/auth/logout.php', { method: 'POST', credentials: 'same-origin' });
+    location.href = 'login.html';
+  });
+
+  document.getElementById('char-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('char-modal')) {
+      document.getElementById('char-modal').classList.remove('show');
+    }
+  });
 }
 
 function setupFilters() {
@@ -70,7 +73,7 @@ function charCardHTML(c) {
   ].join('');
 
   return `
-    <div class="char-card">
+    <div class="char-card" data-id="${c.id}" style="cursor:pointer" onclick="showDetail(${c.id})">
       <div class="char-card-top">
         <div class="char-card-icon">${CLASS_ICON[c.piece_class]}</div>
         <div class="char-card-meta">
@@ -95,6 +98,43 @@ function skillTagHTML(type, skill) {
       <div class="skill-tag-name">${esc(skill.name)}${uses}</div>
     </div>
   `;
+}
+
+function showDetail(id) {
+  const c = allCharacters.find(x => x.id === id);
+  if (!c) return;
+
+  const active  = c.active_skill;
+  const passive = c.passive_skill;
+
+  document.getElementById('modal-icon').textContent  = CLASS_ICON[c.piece_class];
+  document.getElementById('modal-name').textContent  = c.name;
+  document.getElementById('modal-class').textContent = CLASS_LABEL[c.piece_class];
+  document.getElementById('modal-rarity').textContent = c.rarity;
+  document.getElementById('modal-rarity').className   = `rarity-badge rarity-${c.rarity}`;
+
+  const skillsEl = document.getElementById('modal-skills');
+  skillsEl.innerHTML = '';
+
+  if (active) {
+    skillsEl.innerHTML += `
+      <div class="modal-skill">
+        <div class="skill-header"><span class="skill-tag-badge a">A</span><strong>${esc(active.name)}</strong>${active.max_uses != null ? `<span class="skill-uses">${active.max_uses}回</span>` : ''}</div>
+        <div class="skill-desc">${esc(active.description || '')}</div>
+      </div>`;
+  }
+  if (passive) {
+    skillsEl.innerHTML += `
+      <div class="modal-skill">
+        <div class="skill-header"><span class="skill-tag-badge p">P</span><strong>${esc(passive.name)}</strong></div>
+        <div class="skill-desc">${esc(passive.description || '')}</div>
+      </div>`;
+  }
+  if (!active && !passive) {
+    skillsEl.innerHTML = '<div class="skill-desc">スキルなし</div>';
+  }
+
+  document.getElementById('char-modal').classList.add('show');
 }
 
 function esc(s) {

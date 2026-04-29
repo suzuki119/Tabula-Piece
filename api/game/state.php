@@ -1,8 +1,8 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
 
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/Chess.php';
 
 function jsonError(int $code, string $msg): void {
@@ -11,9 +11,9 @@ function jsonError(int $code, string $msg): void {
     exit;
 }
 
+$userId  = requireAuth();
 $matchId = (int)($_GET['match_id'] ?? 0);
-$userId  = (int)($_GET['user_id']  ?? 0);
-if (!$matchId || !$userId) jsonError(400, 'match_id と user_id は必須です');
+if (!$matchId) jsonError(400, 'match_id は必須です');
 
 $db = getDb();
 

@@ -62,9 +62,8 @@ class BoardController {
     this.$resultTitle = document.getElementById('result-title');
     this.$resultReason= document.getElementById('result-reason');
 
-    // ホームリンクに user_id を付加
     const homeBtn = document.getElementById('home-btn');
-    if (homeBtn) homeBtn.href = `home.html?user_id=${this.userId}`;
+    if (homeBtn) homeBtn.href = 'home.html';
 
     // 降参ボタン
     const surrenderBtn = document.getElementById('surrender-btn');
@@ -82,7 +81,8 @@ class BoardController {
 
   async fetchState() {
     try {
-      const res = await fetch(`${API_BASE}/state.php?match_id=${this.matchId}&user_id=${this.userId}`);
+      const res = await fetch(`${API_BASE}/state.php?match_id=${this.matchId}`, { credentials: 'same-origin' });
+      if (res.status === 401) { location.href = 'login.html'; return; }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       this.state = await res.json();
       this._syncPendingSelection();
@@ -175,7 +175,7 @@ class BoardController {
       const res = await fetch(`${API_BASE}/move.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ match_id: this.matchId, user_id: this.userId, from, to }),
+        body: JSON.stringify({ match_id: this.matchId, from, to }),
       });
       const data = await res.json();
       if (!res.ok) { alert(data.error || '移動に失敗しました'); this.startPollingOrTimer(); return; }
@@ -192,7 +192,7 @@ class BoardController {
   async submitSkill(from, skillId, target = null) {
     this.stopAll();
     try {
-      const body = { match_id: this.matchId, user_id: this.userId, from, skill_id: skillId };
+      const body = { match_id: this.matchId, from, skill_id: skillId };
       if (target) body.target = target;
 
       const res = await fetch(`${API_BASE}/skill.php`, {
@@ -642,7 +642,7 @@ class BoardController {
       const res = await fetch(`${API_BASE}/skill.php`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ match_id: this.matchId, user_id: this.userId, from: '', skill_id: 0 }),
+        body:    JSON.stringify({ match_id: this.matchId, from: '', skill_id: 0 }),
       });
       const data = await res.json();
       if (!res.ok) { alert(data.error || 'スキップに失敗しました'); this.startPollingOrTimer(); return; }
@@ -659,7 +659,7 @@ class BoardController {
       const res  = await fetch(`${API_BASE}/../matches/surrender.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ match_id: this.matchId, user_id: this.userId }),
+        body: JSON.stringify({ match_id: this.matchId }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -685,18 +685,20 @@ class BoardController {
 
 // ─── エントリポイント ─────────────────────────────────────
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const params  = new URLSearchParams(location.search);
-  const matchId = parseInt(params.get('id')      || '0');
-  const userId  = parseInt(params.get('user_id') || '0');
+  const matchId = parseInt(params.get('id') || '0');
 
-  if (!matchId || !userId) {
+  if (!matchId) {
     document.body.innerHTML =
-      '<p style="color:#e94560;padding:20px">URLに ?id=<試合ID>&user_id=<ユーザーID> を指定してください</p>';
+      '<p style="color:#e94560;padding:20px">URLに ?id=<試合ID> を指定してください</p>';
     return;
   }
 
-  const ctrl = new BoardController({ matchId, userId });
-  window._boardCtrl = ctrl; // cancelSkillMode 呼び出し用
+  const user = await requireLogin();
+  if (!user) return;
+
+  const ctrl = new BoardController({ matchId, userId: user.user_id });
+  window._boardCtrl = ctrl;
   ctrl.init();
 });

@@ -1,13 +1,12 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST')    { http_response_code(405); echo json_encode(['error' => 'Method Not Allowed']); exit; }
 
 require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../config/auth.php';
 
 function jsonError(int $code, string $msg): void {
     http_response_code($code);
@@ -15,15 +14,14 @@ function jsonError(int $code, string $msg): void {
     exit;
 }
 
-$body = json_decode(file_get_contents('php://input'), true);
+$userId = requireAuth();
+
+$body   = json_decode(file_get_contents('php://input'), true);
 if (!$body) jsonError(400, 'リクエストボディが不正です');
 
-$userId  = (int)($body['user_id']  ?? 0);
-$deckId  = isset($body['deck_id']) ? (int)$body['deck_id'] : null;
-$name    = trim($body['name'] ?? 'マイデッキ');
-$slots   = $body['slots'] ?? [];
-
-if (!$userId) jsonError(400, 'user_id は必須です');
+$deckId = isset($body['deck_id']) ? (int)$body['deck_id'] : null;
+$name   = trim($body['name'] ?? 'マイデッキ');
+$slots  = $body['slots'] ?? [];
 
 $classes = ['pawn','knight','bishop','rook','queen','king'];
 $charIds = [];

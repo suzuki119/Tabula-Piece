@@ -1,22 +1,14 @@
 /* home.js — ホーム画面 */
 
-const params  = new URLSearchParams(location.search);
-const USER_ID = parseInt(params.get('user_id'), 10) || 1;
-
-function applyUserIdToLinks() {
-  document.querySelectorAll('a[href]').forEach(a => {
-    const href = a.getAttribute('href');
-    if (href && !href.startsWith('http') && !href.includes('user_id=')) {
-      const sep = href.includes('?') ? '&' : '?';
-      a.setAttribute('href', `${href}${sep}user_id=${USER_ID}`);
-    }
-  });
-}
-
 async function init() {
-  applyUserIdToLinks();
+  const user = await requireLogin();
+  if (!user) return;
+
+  document.getElementById('user-name').textContent = user.name;
+
   try {
-    const res     = await fetch(`../api/matches/list.php?user_id=${USER_ID}`);
+    const res     = await apiFetch('../api/matches/list.php');
+    if (!res) return;
     const matches = await res.json();
 
     const active   = matches.filter(m => m.status === 'in_progress');
@@ -31,6 +23,11 @@ async function init() {
     document.getElementById('matches-list').innerHTML =
       `<div class="loading">読み込みに失敗しました</div>`;
   }
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await fetch('../api/auth/logout.php', { method: 'POST', credentials: 'same-origin' });
+    location.href = 'login.html';
+  });
 }
 
 function renderMatchList(containerId, matches, type) {
@@ -50,10 +47,8 @@ function matchCardHTML(m, type) {
         : '<span class="turn-badge opp-turn">相手の番</span>')
     : resultBadge(m);
 
-  const href = `match.html?id=${m.id}&user_id=${USER_ID}`;
-
   return `
-    <a class="match-card" href="${href}">
+    <a class="match-card" href="match.html?id=${m.id}">
       <div class="match-card-left">
         <div class="match-opponent">vs ${esc(opponent)}</div>
         <div class="match-turn">ターン ${m.current_turn}</div>
