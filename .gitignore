@@ -1,0 +1,6 @@
+# 本番DB設定（認証情報を含むためGit管理外）
+api/config/db_local.php
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
