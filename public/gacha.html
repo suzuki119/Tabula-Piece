@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ガチャ — Tabula-Piece</title>
+  <link rel="stylesheet" href="css/deck.css">
+  <link rel="stylesheet" href="css/gacha.css">
+</head>
+<body>
+
+<header class="page-header">
+  <div class="page-title">ガチャ</div>
+  <nav class="nav-links">
+    <a href="home.html">ホーム</a>
+    <a href="characters.html">キャラクター</a>
+  </nav>
+</header>
+
+<!-- ガチャ石・所持情報 -->
+<div class="gacha-info-bar">
+  <div class="stones-display">
+    <span class="stones-icon">💎</span>
+    <span class="stones-value" id="stones-value">—</span>
+    <span class="stones-label">石</span>
+  </div>
+  <div class="owned-display" id="owned-display">—/— 所持</div>
+</div>
+
+<!-- レート表示 -->
+<div class="rate-bar">
+  <span class="rate-item ssr">SSR 3%</span>
+  <span class="rate-item sr">SR 12%</span>
+  <span class="rate-item r">R 35%</span>
+  <span class="rate-item n">N 50%</span>
+</div>
+
+<!-- ガチャボタン -->
+<div class="gacha-btns" id="gacha-btns">
+  <button class="gacha-btn single" id="btn-single">
+    <div class="gacha-btn-title">1回引く</div>
+    <div class="gacha-btn-cost">💎 100石</div>
+  </button>
+  <button class="gacha-btn multi" id="btn-multi">
+    <div class="gacha-btn-title">10連</div>
+    <div class="gacha-btn-cost">💎 1000石 <span class="guarantee-badge">SR保証</span></div>
+  </button>
+</div>
+
+<!-- 演出エリア -->
+<div class="gacha-stage" id="gacha-stage" style="display:none">
+  <div class="gacha-cards" id="gacha-cards"></div>
+  <button class="btn" id="btn-open" style="display:none">オープン！</button>
+  <button class="btn btn-ghost" id="btn-again">もう一度引く</button>
+</div>
+
+<!-- 結果サマリー -->
+<div class="result-summary" id="result-summary" style="display:none">
+  <div class="summary-row" id="summary-new"></div>
+  <div class="summary-refund" id="summary-refund"></div>
+</div>
+
+<script src="js/gacha.js"></script>
+</body>
+</html>

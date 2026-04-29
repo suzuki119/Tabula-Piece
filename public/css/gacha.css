@@ -1,0 +1,270 @@
+/* gacha.css — ガチャ画面スタイル */
+
+/* ─── 石・所持バー ───────────────────────────────────── */
+.gacha-info-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 480px;
+  margin: 0 auto 12px;
+  background: var(--bg-panel);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  box-shadow: var(--shadow);
+}
+
+.stones-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stones-icon  { font-size: 20px; }
+.stones-value { font-size: 22px; font-weight: 700; color: var(--gold); }
+.stones-label { font-size: 13px; color: var(--text-muted); }
+
+.owned-display { font-size: 13px; color: var(--text-muted); }
+
+/* ─── レートバー ─────────────────────────────────────── */
+.rate-bar {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  max-width: 480px;
+  margin: 0 auto 20px;
+  flex-wrap: wrap;
+}
+.rate-item {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.rate-item.ssr { background: var(--rarity-ssr); color: #fff; box-shadow: 0 0 8px rgba(233,69,96,0.4); }
+.rate-item.sr  { background: var(--rarity-sr);  color: #000; }
+.rate-item.r   { background: var(--rarity-r);   color: #fff; }
+.rate-item.n   { background: var(--rarity-n);   color: #fff; }
+
+/* ─── ガチャボタン ───────────────────────────────────── */
+.gacha-btns {
+  display: flex;
+  gap: 14px;
+  max-width: 480px;
+  margin: 0 auto 24px;
+}
+
+.gacha-btn {
+  flex: 1;
+  background: var(--bg-panel);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 20px 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.1s;
+  text-align: center;
+}
+.gacha-btn:hover:not(:disabled) {
+  border-color: var(--accent-soft);
+  transform: translateY(-2px);
+}
+.gacha-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.gacha-btn.loading  { opacity: 0.6; }
+
+.gacha-btn.multi { border-color: rgba(245,197,24,0.3); }
+.gacha-btn.multi:hover:not(:disabled) { border-color: var(--gold); }
+
+.gacha-btn-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.gacha-btn-cost  { font-size: 13px; color: var(--text-muted); }
+
+.guarantee-badge {
+  display: inline-block;
+  background: var(--gold);
+  color: #000;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* ─── 演出エリア ─────────────────────────────────────── */
+.gacha-stage {
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.gacha-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+}
+
+/* ─── カード ─────────────────────────────────────────── */
+.gacha-card {
+  width: 80px;
+  height: 110px;
+  perspective: 600px;
+  cursor: default;
+  flex-shrink: 0;
+}
+
+/* 1枚引き: 大きく表示 */
+.gacha-cards:has(.gacha-card:only-child) .gacha-card {
+  width: 140px;
+  height: 190px;
+}
+
+.card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.gacha-card.flipped .card-inner { transform: rotateY(180deg); }
+
+.card-front,
+.card-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 裏面 */
+.card-back {
+  background: linear-gradient(135deg, #1a1928, #242336);
+  border: 2px solid rgba(255,255,255,0.1);
+}
+.card-back-icon {
+  font-size: 28px;
+  color: rgba(255,255,255,0.15);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 0.15; }
+  50%      { opacity: 0.4; }
+}
+
+/* 表面 */
+.card-front {
+  background: var(--bg-card);
+  border: 2px solid rgba(255,255,255,0.12);
+  transform: rotateY(180deg);
+  gap: 4px;
+  padding: 8px 4px;
+  overflow: hidden;
+}
+
+.card-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.gacha-card.flipped .card-glow { opacity: 1; }
+
+.rarity-glow-SSR { background: radial-gradient(ellipse at center, rgba(233,69,96,0.25) 0%, transparent 70%); }
+.rarity-glow-SR  { background: radial-gradient(ellipse at center, rgba(245,197,24,0.2) 0%, transparent 70%); }
+.rarity-glow-R   { background: radial-gradient(ellipse at center, rgba(96,168,255,0.15) 0%, transparent 70%); }
+
+.card-icon { font-size: 28px; line-height: 1; position: relative; z-index: 1; }
+.card-name {
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+  position: relative;
+  z-index: 1;
+  color: var(--text-primary);
+}
+
+.new-badge {
+  background: var(--accent);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+  position: relative;
+  z-index: 1;
+}
+.dupe-badge {
+  background: rgba(255,255,255,0.1);
+  color: var(--text-muted);
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+/* SR フラッシュ */
+.gacha-card.sr-flash .card-front {
+  border-color: var(--gold);
+  box-shadow: 0 0 12px rgba(245,197,24,0.5);
+}
+
+/* SSR エフェクト */
+.gacha-card.ssr-effect .card-front {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(233,69,96,0.7);
+  animation: ssr-shine 0.6s ease;
+}
+@keyframes ssr-shine {
+  0%   { box-shadow: 0 0 0px rgba(233,69,96,0); }
+  50%  { box-shadow: 0 0 30px rgba(233,69,96,0.9); }
+  100% { box-shadow: 0 0 20px rgba(233,69,96,0.7); }
+}
+
+.ssr-burst {
+  position: absolute;
+  inset: -10px;
+  border-radius: 14px;
+  background: radial-gradient(ellipse at center, rgba(233,69,96,0.6) 0%, transparent 70%);
+  animation: burst 0.6s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes burst {
+  0%   { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* ─── 結果サマリー ───────────────────────────────────── */
+.result-summary {
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.summary-char {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.rarity-bg-SSR { background: var(--rarity-ssr); color: #fff; }
+.rarity-bg-SR  { background: var(--rarity-sr);  color: #000; }
+.rarity-bg-R   { background: var(--rarity-r);   color: #fff; }
+.rarity-bg-N   { background: var(--rarity-n);   color: #fff; }
+
+.summary-none   { font-size: 13px; color: var(--text-muted); }
+.summary-refund { font-size: 12px; color: var(--text-muted); }
