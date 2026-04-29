@@ -1,10 +1,24 @@
 /**
- * Tabula-Piece チェスエンジン
- * 6×6ボード、キング捕獲で即勝利、ターン切れはポイント比較で判定
+ * Tabula-Piece チェスエンジン（フロントエンド用）
+ * Phase 4: スキルシステム対応
  */
 
 const PIECE_VALUES = { pawn: 1, knight: 3, bishop: 3, rook: 5, queen: 9, king: 0 };
 const COLS = ['a', 'b', 'c', 'd', 'e', 'f'];
+
+// スキルID定数
+const SKILL = {
+  REMATCH:     1,
+  TELEPORT:    2,
+  FIRST_MOVE:  3,
+  SHIELD:      4,
+  ENHANCE:     5,
+  COUNTER:     6,
+  VALUE_UP:    7,
+  DEATH_CURSE: 8,
+  TRAP:        9,
+  SANCTUARY:   10,
+};
 
 // ─── ボードヘルパー ────────────────────────────────────────────
 
@@ -14,23 +28,41 @@ function toSq(c, r)      { return COLS[c] + r; }
 function inBounds(c, r)  { return c >= 0 && c < 6 && r >= 1 && r <= 6; }
 function opponent(color) { return color === 'white' ? 'black' : 'white'; }
 
+function isAdjacent(sq1, sq2) {
+  const dc = Math.abs(colIdx(sq1) - colIdx(sq2));
+  const dr = Math.abs(rowNum(sq1) - rowNum(sq2));
+  return sq1 !== sq2 && dc <= 1 && dr <= 1;
+}
+
 // ─── 初期ボード ───────────────────────────────────────────────
-// 後列: a=Rook, b=Knight, c=Bishop, d=Queen, e=King, f=空
-// 白: 後列=row1、前列(ポーン)=row2
-// 黒: 前列(ポーン)=row5、後列=row6
+
+function makePiece(piece, color, extra = {}) {
+  return {
+    piece,
+    color,
+    character_id:     null,
+    active_skill_id:  null,
+    passive_skill_id: null,
+    active_used:      0,
+    passive_used:     0,
+    shield:           false,
+    value_bonus:      0,
+    ...extra,
+  };
+}
 
 function createInitialBoard() {
   const board = {};
   const backPieces = ['rook', 'knight', 'bishop', 'queen', 'king'];
 
   backPieces.forEach((piece, i) => {
-    board[toSq(i, 1)] = { piece, color: 'white', character_id: null, active_used: 0 };
-    board[toSq(i, 6)] = { piece, color: 'black', character_id: null, active_used: 0 };
+    board[toSq(i, 1)] = makePiece(piece, 'white');
+    board[toSq(i, 6)] = makePiece(piece, 'black');
   });
 
   COLS.forEach((_, i) => {
-    board[toSq(i, 2)] = { piece: 'pawn', color: 'white', character_id: null, active_used: 0 };
-    board[toSq(i, 5)] = { piece: 'pawn', color: 'black', character_id: null, active_used: 0 };
+    board[toSq(i, 2)] = makePiece('pawn', 'white');
+    board[toSq(i, 5)] = makePiece('pawn', 'black');
   });
 
   return board;
@@ -70,9 +102,7 @@ function getPseudoMoves(board, sq) {
     case 'pawn': {
       const dir = p.color === 'white' ? 1 : -1;
       const nr = r + dir;
-      // 前進
       if (inBounds(c, nr) && !board[toSq(c, nr)]) moves.push(toSq(c, nr));
-      // 斜め捕獲
       [-1, 1].forEach(dc => {
         if (!inBounds(c + dc, nr)) return;
         const t = board[toSq(c + dc, nr)];
@@ -102,38 +132,32 @@ function getPseudoMoves(board, sq) {
   return moves;
 }
 
-// このゲームはキング捕獲=即勝利なので王手回避は強制しない（getLegalMoves = getPseudoMoves）
-function getLegalMoves(board, sq) {
-  return getPseudoMoves(board, sq);
-}
+// 聖域スキル考慮
+function getLegalMoves(board, sq, traps = {}) {
+  const piece = board[sq];
+  if (!piece) return [];
 
-// ─── 移動適用 ─────────────────────────────────────────────────
+  let moves = getPseudoMoves(board, sq);
+  const opColor = opponent(piece.color);
 
-function applyMove(board, from, to) {
-  const newBoard = Object.assign({}, board);
-  const piece = Object.assign({}, newBoard[from]);
-  delete newBoard[from];
-
-  // ポーン成り（最終段に達したらクイーンに昇格）
-  if (piece.piece === 'pawn') {
-    if ((piece.color === 'white' && rowNum(to) === 6) ||
-        (piece.color === 'black' && rowNum(to) === 1)) {
-      piece.piece = 'queen';
+  // 聖域: 相手の駒が聖域パッシブを持つマスは進入不可
+  Object.entries(board).forEach(([oSq, op]) => {
+    if (op && op.color === opColor && op.passive_skill_id === SKILL.SANCTUARY) {
+      moves = moves.filter(m => m !== oSq);
     }
-  }
+  });
 
-  newBoard[to] = piece;
-  return newBoard;
+  return moves;
 }
 
-// ─── ポイント計算 ─────────────────────────────────────────────
+// ─── ポイント計算（value_bonus 考慮）─────────────────────────
 
 function calcPoints(board, color) {
   return Object.values(board).reduce((sum, p) => {
-    if (p && p.color === color && p.piece !== 'king') {
-      return sum + (PIECE_VALUES[p.piece] || 0);
-    }
-    return sum;
+    if (!p || p.color !== color || p.piece === 'king') return sum;
+    const base  = PIECE_VALUES[p.piece] || 0;
+    const bonus = p.value_bonus || 0;
+    return sum + Math.max(0, base + bonus);
   }, 0);
 }
 
@@ -141,104 +165,42 @@ function hasKing(board, color) {
   return Object.values(board).some(p => p && p.piece === 'king' && p.color === color);
 }
 
-// ─── ゲーム状態 ───────────────────────────────────────────────
+// ─── テレポートの移動先候補（全空きマス）────────────────────
 
-function createGameState(player1Id, player2Id) {
-  return {
-    board: createInitialBoard(),
-    currentPlayer: 'player1',  // player1 = 白
-    turn: 1,
-    maxTurns: 30,
-    status: 'in_progress',     // 'in_progress' | 'finished'
-    winner: null,              // null | 'player1' | 'player2' | 'draw'
-    endReason: null,           // null | 'checkmate' | 'points' | 'timeout'
-    player1Id,
-    player2Id,
-  };
+function getTeleportTargets(board) {
+  const all = [];
+  COLS.forEach(col => {
+    for (let r = 1; r <= 6; r++) {
+      const sq = col + r;
+      if (!board[sq]) all.push(sq);
+    }
+  });
+  return all;
 }
 
-function playerColor(player) {
-  return player === 'player1' ? 'white' : 'black';
+// ─── 駒強化の対象候補（隣接する味方駒）──────────────────────
+
+function getEnhanceTargets(board, from, color) {
+  return Object.keys(board).filter(sq => {
+    const p = board[sq];
+    return p && p.color === color && isAdjacent(from, sq);
+  });
 }
 
-// ─── 移動検証 ─────────────────────────────────────────────────
+// ─── トラップ設置の候補（空きマス）──────────────────────────
 
-function validateMove(state, player, from, to) {
-  if (state.status !== 'in_progress') return { valid: false, reason: '試合は終了しています' };
-  if (state.currentPlayer !== player)  return { valid: false, reason: 'あなたのターンではありません' };
-
-  const piece = state.board[from];
-  if (!piece) return { valid: false, reason: `${from} に駒がありません` };
-
-  const color = playerColor(player);
-  if (piece.color !== color) return { valid: false, reason: '自分の駒ではありません' };
-
-  const legal = getLegalMoves(state.board, from);
-  if (!legal.includes(to)) return { valid: false, reason: `${from}→${to} は不正な移動です` };
-
-  return { valid: true };
+function getTrapTargets(board) {
+  return getTeleportTargets(board); // 空きマスならどこでも
 }
 
-// ─── 移動実行 → 新しいゲーム状態を返す ────────────────────────
-
-function executeMove(state, player, from, to) {
-  const check = validateMove(state, player, from, to);
-  if (!check.valid) throw new Error(check.reason);
-
-  const newBoard = applyMove(state.board, from, to);
-  const opponentPlayer = player === 'player1' ? 'player2' : 'player1';
-  const opponentColor  = playerColor(opponentPlayer);
-
-  let status    = 'in_progress';
-  let winner    = null;
-  let endReason = null;
-
-  // 勝利条件1: キング捕獲
-  if (!hasKing(newBoard, opponentColor)) {
-    status    = 'finished';
-    winner    = player;
-    endReason = 'checkmate';
-  }
-
-  // ターンカウント（黒が手番を終えたらターン+1）
-  const nextTurn = player === 'player2' ? state.turn + 1 : state.turn;
-
-  // 勝利条件2: ターン上限
-  if (status === 'in_progress' && nextTurn > state.maxTurns) {
-    const p1pts = calcPoints(newBoard, 'white');
-    const p2pts = calcPoints(newBoard, 'black');
-    status    = 'finished';
-    endReason = 'points';
-    if (p1pts > p2pts)      winner = 'player1';
-    else if (p2pts > p1pts) winner = 'player2';
-    else                    winner = 'draw';
-  }
-
-  return {
-    ...state,
-    board:         newBoard,
-    currentPlayer: status === 'finished' ? null : opponentPlayer,
-    turn:          nextTurn,
-    status,
-    winner,
-    endReason,
-  };
-}
-
-// ─── JSON変換（DB保存用） ─────────────────────────────────────
-
-function serializeBoard(board)  { return JSON.stringify(board); }
-function deserializeBoard(json) { return JSON.parse(json); }
-
-// ─── エクスポート（Node.js / ブラウザ両対応） ─────────────────
+// ─── エクスポート（ブラウザ / Node.js 両対応）────────────────
 
 const Chess = {
-  PIECE_VALUES, COLS,
-  createInitialBoard, createGameState,
-  getLegalMoves, validateMove, executeMove,
-  calcPoints, hasKing, applyMove,
-  serializeBoard, deserializeBoard,
-  playerColor,
+  PIECE_VALUES, COLS, SKILL,
+  makePiece, createInitialBoard,
+  getLegalMoves, getPseudoMoves,
+  calcPoints, hasKing, isAdjacent,
+  getTeleportTargets, getEnhanceTargets, getTrapTargets,
 };
 
 if (typeof module !== 'undefined' && module.exports) {

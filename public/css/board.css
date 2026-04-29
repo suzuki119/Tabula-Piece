@@ -327,3 +327,181 @@ body {
   display: inline-block;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── スキルシステム UI ──────────────────────────────────── */
+
+/* 駒パネル内部レイアウト */
+.piece-panel-inner { width: 100%; }
+
+.piece-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.piece-panel .piece-status {
+  display: inline-block;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-top: 3px;
+  margin-right: 4px;
+}
+.piece-status.shield  { background: rgba(80,180,255,0.2); color: #60c8ff; }
+.piece-status.bonus   { background: rgba(245,197,24,0.2);  color: var(--gold); }
+.piece-status.debuff  { background: rgba(233,69,96,0.2);   color: var(--accent-soft); }
+
+/* スキル行 */
+.skill-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 7px;
+  margin-top: 6px;
+}
+.active-skill  { background: rgba(233,69,96,0.1);  border: 1px solid rgba(233,69,96,0.25); }
+.passive-skill { background: rgba(80,100,220,0.1); border: 1px solid rgba(80,100,220,0.25); }
+
+.skill-type-badge {
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.active-badge  { background: var(--accent);      color: #fff; }
+.passive-badge { background: #5064dc;             color: #fff; }
+
+.skill-detail { flex: 1; min-width: 0; }
+.skill-name { font-size: 13px; font-weight: 600; }
+.skill-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+.skill-uses { font-size: 11px; color: var(--gold); margin-top: 2px; }
+
+/* スキル発動ボタン */
+.skill-btn {
+  padding: 4px 10px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  align-self: center;
+  transition: background 0.15s;
+}
+.skill-btn:hover { background: var(--accent-soft); }
+
+/* ターゲット選択ヒント */
+.skill-target-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--gold);
+  font-weight: 600;
+}
+.skill-cancel-btn {
+  padding: 4px 10px;
+  background: rgba(255,255,255,0.1);
+  color: var(--text-muted);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.skill-cancel-btn:hover { background: rgba(255,255,255,0.18); }
+
+/* ターゲット選択マス */
+.cell.skill-target::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(245,197,24,0.45);
+  border: 2px solid var(--gold);
+}
+.cell.skill-target.has-piece::after {
+  background: rgba(245,197,24,0.3);
+}
+
+/* シールド・value_bonus バッジ */
+.piece-badge {
+  position: absolute;
+  font-size: 9px;
+  line-height: 1;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 3px;
+  padding: 1px 2px;
+}
+.shield-badge {
+  top: 1px; right: 1px;
+  font-size: 10px;
+}
+.value-badge {
+  bottom: 1px; right: 1px;
+  background: rgba(245,197,24,0.85);
+  color: #000;
+  font-weight: 700;
+  font-size: 9px;
+}
+.value-badge.negative {
+  background: rgba(233,69,96,0.85);
+  color: #fff;
+}
+
+/* 再移動待機マス */
+.cell.rematch-sq {
+  box-shadow: inset 0 0 0 3px var(--gold);
+}
+
+/* 再移動バナー */
+.turn-banner.rematch {
+  background: rgba(245,197,24,0.15);
+  color: var(--gold);
+  border: 1px solid rgba(245,197,24,0.3);
+}
+
+/* 聖域マス（自分の聖域駒） */
+.cell.sanctuary {
+  box-shadow: inset 0 0 0 2px rgba(80,100,220,0.8);
+}
+
+/* 自分のトラップマス */
+.cell.my-trap::before {
+  content: '⚠';
+  position: absolute;
+  top: 0; left: 1px;
+  font-size: 9px;
+  z-index: 2;
+  opacity: 0.7;
+}
+
+/* スキル発動通知 */
+#skill-notice {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-60px);
+  background: var(--accent);
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  z-index: 200;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+#skill-notice.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
