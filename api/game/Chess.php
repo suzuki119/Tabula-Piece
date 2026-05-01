@@ -1062,8 +1062,28 @@ class Chess {
                 break;
 
             case self::SKILL_LIGHTNING_SLASH:
-                // 神速斬り: 実装省略（移動後のナイト追加移動は複雑）
-                $board[$from]['active_used']++;
+                // 神速斬り: ナイトの動きで追加移動して駒を取る
+                if (!$target) throw new RuntimeException('攻撃先を指定してください');
+                $tp = $board[$target] ?? null;
+                if (!$tp || $tp['color'] === $color) throw new RuntimeException('相手の駒を指定してください');
+                if ($tp['piece'] === 'king') throw new RuntimeException('キングは攻撃できません');
+                $dc = abs(self::colIdx($from) - self::colIdx($target));
+                $dr = abs(self::rowNum($from) - self::rowNum($target));
+                if (!(($dc === 1 && $dr === 2) || ($dc === 2 && $dr === 1))) {
+                    throw new RuntimeException('ナイトの動きで届かないマスです');
+                }
+                if (!empty($tp['shield'])) {
+                    // シールドで無効化
+                    $board[$target]['shield'] = false;
+                    $board[$from]['active_used']++;
+                } else {
+                    // 駒を除去してナイト移動
+                    $moving = $board[$from];
+                    $moving['active_used']++;
+                    unset($board[$from]);
+                    unset($board[$target]);
+                    $board[$target] = $moving;
+                }
                 break;
 
             // ─── 価値操作系 ──────────────────────────────────

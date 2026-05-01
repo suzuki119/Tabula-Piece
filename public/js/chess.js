@@ -362,6 +362,17 @@ function getLineTargets(board, sq) {
   return [...new Set(result)];
 }
 
+// ─── ナイト跳び攻撃の対象候補（神速斬り用）──────────────────
+
+function getKnightCaptureTargets(board, sq, color) {
+  const opp = opponent(color);
+  const c = colIdx(sq), r = rowNum(sq);
+  return [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]]
+    .filter(([dc, dr]) => inBounds(c + dc, r + dr))
+    .map(([dc, dr]) => toSq(c + dc, r + dr))
+    .filter(s => board[s]?.color === opp && board[s]?.piece !== 'king');
+}
+
 // ─── エクスポート（ブラウザ / Node.js 両対応）────────────────
 
 const Chess = {
@@ -372,7 +383,7 @@ const Chess = {
   getTeleportTargets, getEnhanceTargets, getTrapTargets,
   getAdjacentSquares, getAdjacentAllyTargets, getAdjacentEnemyTargets,
   getAdjacentEmptyTargets, getAnyEnemyTargets, getAnyAllyTargets,
-  getRange2Targets, getLineTargets,
+  getRange2Targets, getLineTargets, getKnightCaptureTargets,
 };
 
 if (typeof module !== 'undefined' && module.exports) {

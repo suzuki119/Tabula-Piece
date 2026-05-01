@@ -398,9 +398,14 @@ class BoardController {
       // ─ 攻撃・貫通系 ──────────────────────────────────────
       case SKILL.CLEAVE:
       case SKILL.EXPLOSION:
-      case SKILL.LIGHTNING_SLASH:
         instant();
         break;
+      case SKILL.LIGHTNING_SLASH: {
+        const targets = Chess.getKnightCaptureTargets(board, from, myColor);
+        if (targets.length === 0) { alert('ナイトの動きで攻撃できる相手駒がありません'); return; }
+        mode(SKILL_MODE.ANY_ENEMY, targets);
+        break;
+      }
       case SKILL.DOUBLE_STRIKE:
       case SKILL.PIERCING_SLASH:
         mode(SKILL_MODE.ADJACENT_ENEMY, Chess.getAdjacentEnemyTargets(board, from, myColor));
