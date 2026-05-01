@@ -47,7 +47,7 @@ $stmt = $db->prepare('SELECT * FROM decks WHERE user_id = ? ORDER BY id DESC LIM
 $stmt->execute([$opponentId]);
 $oppDeck = $stmt->fetch() ?: null;
 
-// 両デッキで使われているキャラクターIDを収集
+// 両デッキで使われているキャラクターIDを収集（通常スロット）
 $allCharIds = [];
 $deckCols = ['pawn_char_id','knight_char_id','bishop_char_id','rook_char_id','queen_char_id','king_char_id'];
 foreach ($deckCols as $col) {
@@ -55,14 +55,29 @@ foreach ($deckCols as $col) {
     if ($oppDeck && $oppDeck[$col]) $allCharIds[] = (int)$oppDeck[$col];
 }
 
+// クラス配置駒を取得してキャラIDも収集
+$cpStmt = $db->prepare('SELECT character_id, board_col, board_row FROM deck_class_pieces WHERE deck_id = ?');
+$cpStmt->execute([$deckId]);
+$myClassPieces = $cpStmt->fetchAll();
+foreach ($myClassPieces as $cp) $allCharIds[] = (int)$cp['character_id'];
+
+$oppClassPieces = [];
+if ($oppDeck) {
+    $cpStmt->execute([$oppDeck['id']]);
+    $oppClassPieces = $cpStmt->fetchAll();
+    foreach ($oppClassPieces as $cp) $allCharIds[] = (int)$cp['character_id'];
+}
+
 // キャラクター情報を一括取得
 $charMap = [];
 if ($allCharIds) {
-    $placeholders = implode(',', array_fill(0, count(array_unique($allCharIds)), '?'));
-    $stmt = $db->prepare("SELECT id, active_skill_id, passive_skill_id FROM characters WHERE id IN ($placeholders)");
-    $stmt->execute(array_unique($allCharIds));
+    $unique = array_unique($allCharIds);
+    $placeholders = implode(',', array_fill(0, count($unique), '?'));
+    $stmt = $db->prepare("SELECT id, piece_class, active_skill_id, passive_skill_id FROM characters WHERE id IN ($placeholders)");
+    $stmt->execute($unique);
     foreach ($stmt->fetchAll() as $c) {
         $charMap[(int)$c['id']] = [
+            'piece_class'      => $c['piece_class'],
             'active_skill_id'  => $c['active_skill_id']  !== null ? (int)$c['active_skill_id']  : null,
             'passive_skill_id' => $c['passive_skill_id'] !== null ? (int)$c['passive_skill_id'] : null,
         ];
@@ -87,6 +102,8 @@ $board = Chess::applyDeckToBoard($board, deckToClassMap($myDeck), $charMap, 'whi
 if ($oppDeck) {
     $board = Chess::applyDeckToBoard($board, deckToClassMap($oppDeck), $charMap, 'black');
 }
+$board = Chess::applyClassPiecesToBoard($board, $myClassPieces,  $charMap, 'white');
+$board = Chess::applyClassPiecesToBoard($board, $oppClassPieces, $charMap, 'black');
 
 $initState = [
     'board'            => $board,

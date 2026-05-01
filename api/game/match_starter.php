@@ -38,21 +38,32 @@ function joinAndStartMatch(PDO $db, int $matchId, int $player2Id, int $player2De
         $oppDeck = $deckMap[$player2DeckId] ?? null;
         if (!$myDeck || !$oppDeck) throw new RuntimeException('デッキが取得できません');
 
-        // 使用キャラID収集
+        // 使用キャラID収集（通常スロット）
         $allCharIds = [];
         foreach ($deckCols as $col) {
             if ($myDeck[$col])  $allCharIds[] = (int)$myDeck[$col];
             if ($oppDeck[$col]) $allCharIds[] = (int)$oppDeck[$col];
         }
 
+        // クラス配置駒を取得してキャラIDも収集
+        $stmt = $db->prepare('SELECT character_id, board_col, board_row FROM deck_class_pieces WHERE deck_id = ?');
+        $stmt->execute([$player1DeckId]);
+        $p1ClassPieces = $stmt->fetchAll();
+        foreach ($p1ClassPieces as $cp) $allCharIds[] = (int)$cp['character_id'];
+
+        $stmt->execute([$player2DeckId]);
+        $p2ClassPieces = $stmt->fetchAll();
+        foreach ($p2ClassPieces as $cp) $allCharIds[] = (int)$cp['character_id'];
+
         $charMap = [];
         if ($allCharIds) {
             $unique = array_unique($allCharIds);
             $placeholders = implode(',', array_fill(0, count($unique), '?'));
-            $stmt = $db->prepare("SELECT id, active_skill_id, passive_skill_id FROM characters WHERE id IN ($placeholders)");
+            $stmt = $db->prepare("SELECT id, piece_class, active_skill_id, passive_skill_id FROM characters WHERE id IN ($placeholders)");
             $stmt->execute($unique);
             foreach ($stmt->fetchAll() as $c) {
                 $charMap[(int)$c['id']] = [
+                    'piece_class'      => $c['piece_class'],
                     'active_skill_id'  => $c['active_skill_id']  !== null ? (int)$c['active_skill_id']  : null,
                     'passive_skill_id' => $c['passive_skill_id'] !== null ? (int)$c['passive_skill_id'] : null,
                 ];
@@ -72,6 +83,8 @@ function joinAndStartMatch(PDO $db, int $matchId, int $player2Id, int $player2De
         $board = Chess::createInitialBoard();
         $board = Chess::applyDeckToBoard($board, $toClassMap($myDeck),  $charMap, 'white');
         $board = Chess::applyDeckToBoard($board, $toClassMap($oppDeck), $charMap, 'black');
+        $board = Chess::applyClassPiecesToBoard($board, $p1ClassPieces, $charMap, 'white');
+        $board = Chess::applyClassPiecesToBoard($board, $p2ClassPieces, $charMap, 'black');
 
         $initState = [
             'board'            => $board,

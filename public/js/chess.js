@@ -8,6 +8,7 @@ const COLS = ['a', 'b', 'c', 'd', 'e', 'f'];
 
 // スキルID定数
 const SKILL = {
+  // オリジナル
   REMATCH:     1,
   TELEPORT:    2,
   FIRST_MOVE:  3,
@@ -18,6 +19,75 @@ const SKILL = {
   DEATH_CURSE: 8,
   TRAP:        9,
   SANCTUARY:   10,
+  // クラス: 支援・回復系
+  HOLY_WALL:          11,
+  HOLY_WALL_2:        12,
+  HOLY_AURA:          13,
+  DIVINE_PROTECTION:  14,
+  REVIVE:             15,
+  REVIVE_SHIELD:      16,
+  SACRIFICE:          17,
+  // クラス: 移動バフ系
+  INSPIRE:            18,
+  INSPIRE_STRONG:     19,
+  INSPIRE_ALL:        20,
+  // クラス: 攻撃・貫通系
+  PENETRATE:          21,
+  CLEAVE:             22,
+  DOUBLE_STRIKE:      23,
+  PIERCING_SLASH:     24,
+  SHADOW_CUT:         25,
+  SWAMP_WAVE:         26,
+  AREA_THRUST:        27,
+  EXPLOSION:          28,
+  LIGHTNING_SLASH:    29,
+  // クラス: 価値操作系
+  VALUE_DOWN_SM:      30,
+  VALUE_DOWN_MD:      31,
+  VALUE_DOWN_LG:      32,
+  DECOY:              33,
+  CURSED_TRADE:       34,
+  VALUE_GAIN_SM:      35,
+  VALUE_GAIN_MD:      36,
+  VALUE_GRANT_MD:     37,
+  VALUE_GRANT_LG:     38,
+  FULL_CURSE:         39,
+  SWAMP_GRACE:        40,
+  // クラス: 罠・設置系
+  STUN_TRAP:          41,
+  STUN_TRAP_STRONG:   42,
+  FORCE_MOVE_TRAP:    43,
+  MAZE_TRAP:          44,
+  PHANTOM_TRAP:       45,
+  WIDE_TRAP:          46,
+  FORTRESS:           47,
+  FORTRESS_LARGE:     48,
+  FORTRESS_SELF:      49,
+  TRAP_SENSE:         50,
+  // クラス: 支配・コピー系
+  DOMINATE:           51,
+  CHARM_LONG:         52,
+  CHARM:              53,
+  DISABLE:            54,
+  HINDER:             55,
+  CHAIN_STRONG:       56,
+  CHAIN:              57,
+  FORCE_MOVE:         58,
+  DOMINATION_MEMORY:  59,
+  SKILL_STEAL:        60,
+  MIMIC_WEAK:         61,
+  FULL_MIMIC:         62,
+  WAR_TROPHY:         63,
+  DOMINATION_ECHO:    64,
+  ASSAULT_DOMINATE:   65,
+  INFECT:             66,
+  CURSE_REFLECT:      67,
+  STUN:               68,
+  STORM_STRIKE:       69,
+  HINDER_STRONG:      70,
+  TIMED_SANCTUARY:    71,
+  GUARD_REACTION:     72,
+  COUNTER_MOVE:       73,
 };
 
 // ─── ボードヘルパー ────────────────────────────────────────────
@@ -205,6 +275,75 @@ function getTrapTargets(board, from) {
   return targets;
 }
 
+// ─── クラススキル用ターゲット候補ヘルパー ────────────────────
+
+function getAdjacentSquares(sq) {
+  const c = colIdx(sq), r = rowNum(sq);
+  const result = [];
+  for (let dc = -1; dc <= 1; dc++) {
+    for (let dr = -1; dr <= 1; dr++) {
+      if (dc === 0 && dr === 0) continue;
+      if (inBounds(c + dc, r + dr)) result.push(toSq(c + dc, r + dr));
+    }
+  }
+  return result;
+}
+
+function getAdjacentAllyTargets(board, sq, color) {
+  return getAdjacentSquares(sq).filter(s => board[s]?.color === color);
+}
+
+function getAdjacentEnemyTargets(board, sq, color) {
+  const opp = opponent(color);
+  return getAdjacentSquares(sq).filter(s => board[s]?.color === opp && board[s]?.piece !== 'king');
+}
+
+function getAdjacentEmptyTargets(board, sq) {
+  return getAdjacentSquares(sq).filter(s => !board[s]);
+}
+
+function getAnyEnemyTargets(board, color, excludeKing = false) {
+  const opp = opponent(color);
+  return Object.keys(board).filter(s => {
+    const p = board[s];
+    return p && p.color === opp && (!excludeKing || p.piece !== 'king');
+  });
+}
+
+function getAnyAllyTargets(board, color) {
+  return Object.keys(board).filter(s => board[s]?.color === color);
+}
+
+function getRange2Targets(board, sq, color) {
+  const opp = opponent(color);
+  const c = colIdx(sq), r = rowNum(sq);
+  const result = [];
+  for (let dc = -2; dc <= 2; dc++) {
+    for (let dr = -2; dr <= 2; dr++) {
+      if (Math.max(Math.abs(dc), Math.abs(dr)) !== 2) continue;
+      if (!inBounds(c + dc, r + dr)) continue;
+      const s = toSq(c + dc, r + dr);
+      const p = board[s];
+      if (p && p.color === opp && p.piece !== 'king') result.push(s);
+    }
+  }
+  return result;
+}
+
+function getLineTargets(board, sq) {
+  const c = colIdx(sq), r = rowNum(sq);
+  const dirs = [[-1,-1],[-1,1],[1,-1],[1,1],[-1,0],[1,0],[0,-1],[0,1]];
+  const result = [];
+  for (const [dc, dr] of dirs) {
+    let nc = c + dc, nr = r + dr;
+    while (inBounds(nc, nr)) {
+      result.push(toSq(nc, nr));
+      nc += dc; nr += dr;
+    }
+  }
+  return [...new Set(result)];
+}
+
 // ─── エクスポート（ブラウザ / Node.js 両対応）────────────────
 
 const Chess = {
@@ -212,7 +351,10 @@ const Chess = {
   makePiece, createInitialBoard,
   getLegalMoves, getPseudoMoves,
   calcPoints, hasKing, isAdjacent,
-  getTeleportTargets, getEnhanceTargets, getTrapTargets, isAdjacent,
+  getTeleportTargets, getEnhanceTargets, getTrapTargets,
+  getAdjacentSquares, getAdjacentAllyTargets, getAdjacentEnemyTargets,
+  getAdjacentEmptyTargets, getAnyEnemyTargets, getAnyAllyTargets,
+  getRange2Targets, getLineTargets,
 };
 
 if (typeof module !== 'undefined' && module.exports) {
