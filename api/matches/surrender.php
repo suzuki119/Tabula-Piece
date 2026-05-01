@@ -37,7 +37,7 @@ if ((int)$match['player1_id'] === $userId) {
 }
 
 $stmt = $db->prepare('
-    UPDATE matches SET status = "finished", winner_id = ?, end_reason = "checkmate"
+    UPDATE matches SET status = "finished", winner_id = ?, end_reason = "surrender"
     WHERE id = ?
 ');
 $stmt->execute([$winnerId, $matchId]);
