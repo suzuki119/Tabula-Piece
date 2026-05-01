@@ -483,17 +483,23 @@ class Chess {
             if (!$t || $t['color'] !== $p['color']) $moves[] = self::toSq($nc, $nr);
         };
 
+        $moveBonus = max(0, (int)($p['move_bonus'] ?? 0));
+
         switch ($p['piece']) {
             case 'pawn':
-                $dir = $p['color'] === 'white' ? 1 : -1;
-                $nr  = $r + $dir;
-                if (self::inBounds($c, $nr) && empty($board[self::toSq($c, $nr)])) {
+                $dir      = $p['color'] === 'white' ? 1 : -1;
+                $maxSteps = 1 + $moveBonus;
+                for ($step = 1; $step <= $maxSteps; $step++) {
+                    $nr = $r + $dir * $step;
+                    if (!self::inBounds($c, $nr)) break;
+                    if (!empty($board[self::toSq($c, $nr)])) break;
                     $moves[] = self::toSq($c, $nr);
                 }
+                $capRow = $r + $dir;
                 foreach ([-1, 1] as $dc) {
-                    if (!self::inBounds($c + $dc, $nr)) continue;
-                    $t = $board[self::toSq($c + $dc, $nr)] ?? null;
-                    if ($t && $t['color'] !== $p['color']) $moves[] = self::toSq($c + $dc, $nr);
+                    if (!self::inBounds($c + $dc, $capRow)) continue;
+                    $t = $board[self::toSq($c + $dc, $capRow)] ?? null;
+                    if ($t && $t['color'] !== $p['color']) $moves[] = self::toSq($c + $dc, $capRow);
                 }
                 break;
             case 'knight':
@@ -513,8 +519,18 @@ class Chess {
                 }
                 break;
             case 'king':
+                $maxRange = 1 + $moveBonus;
                 foreach ([[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]] as [$dc,$dr]) {
-                    $addStep($dc, $dr);
+                    for ($step = 1; $step <= $maxRange; $step++) {
+                        $nc = $c + $dc * $step; $nr = $r + $dr * $step;
+                        if (!self::inBounds($nc, $nr)) break;
+                        $t = $board[self::toSq($nc, $nr)] ?? null;
+                        if ($t) {
+                            if ($t['color'] !== $p['color']) $moves[] = self::toSq($nc, $nr);
+                            break;
+                        }
+                        $moves[] = self::toSq($nc, $nr);
+                    }
                 }
                 break;
         }

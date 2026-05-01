@@ -168,15 +168,23 @@ function getPseudoMoves(board, sq) {
     if (!target || target.color !== p.color) moves.push(toSq(nc, nr));
   };
 
+  const moveBonus = Math.max(0, p.move_bonus || 0);
+
   switch (p.piece) {
     case 'pawn': {
-      const dir = p.color === 'white' ? 1 : -1;
-      const nr = r + dir;
-      if (inBounds(c, nr) && !board[toSq(c, nr)]) moves.push(toSq(c, nr));
+      const dir      = p.color === 'white' ? 1 : -1;
+      const maxSteps = 1 + moveBonus;
+      for (let step = 1; step <= maxSteps; step++) {
+        const nr = r + dir * step;
+        if (!inBounds(c, nr)) break;
+        if (board[toSq(c, nr)]) break;
+        moves.push(toSq(c, nr));
+      }
+      const capRow = r + dir;
       [-1, 1].forEach(dc => {
-        if (!inBounds(c + dc, nr)) return;
-        const t = board[toSq(c + dc, nr)];
-        if (t && t.color !== p.color) moves.push(toSq(c + dc, nr));
+        if (!inBounds(c + dc, capRow)) return;
+        const t = board[toSq(c + dc, capRow)];
+        if (t && t.color !== p.color) moves.push(toSq(c + dc, capRow));
       });
       break;
     }
@@ -194,10 +202,20 @@ function getPseudoMoves(board, sq) {
       [[-1,-1],[-1,1],[1,-1],[1,1],[-1,0],[1,0],[0,-1],[0,1]]
         .forEach(([dc, dr]) => addSlide(dc, dr));
       break;
-    case 'king':
+    case 'king': {
+      const maxRange = 1 + moveBonus;
       [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]
-        .forEach(([dc, dr]) => addStep(dc, dr));
+        .forEach(([dc, dr]) => {
+          for (let step = 1; step <= maxRange; step++) {
+            const nc = c + dc * step, nr = r + dr * step;
+            if (!inBounds(nc, nr)) break;
+            const t = board[toSq(nc, nr)];
+            if (t) { if (t.color !== p.color) moves.push(toSq(nc, nr)); break; }
+            moves.push(toSq(nc, nr));
+          }
+        });
       break;
+    }
   }
   return moves;
 }
