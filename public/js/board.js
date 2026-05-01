@@ -198,6 +198,9 @@ class BoardController {
   // ─── 移動送信 ─────────────────────────────────────────────
 
   async submitMove(from, to) {
+    const fromCell = this.$board.querySelector(`[data-sq="${from}"]`);
+    this._moveAnim = fromCell ? { from, to, fromRect: fromCell.getBoundingClientRect() } : null;
+
     this.stopAll();
     this._setLoading(true);
     try {
@@ -718,6 +721,29 @@ class BoardController {
         this.$board.appendChild(cell);
       });
     });
+
+    // FLIP アニメーション: 駒が to マスにスライド移動して見える
+    if (this._moveAnim) {
+      const { to, fromRect } = this._moveAnim;
+      this._moveAnim = null;
+      const toCell = this.$board.querySelector(`[data-sq="${to}"]`);
+      if (toCell) {
+        const toRect = toCell.getBoundingClientRect();
+        const dx = fromRect.left - toRect.left;
+        const dy = fromRect.top  - toRect.top;
+        const pieceEl = toCell.querySelector('.piece');
+        if (pieceEl && (dx !== 0 || dy !== 0)) {
+          pieceEl.style.transition = 'none';
+          pieceEl.style.transform  = `translate(${dx}px, ${dy}px)`;
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              pieceEl.style.transition = 'transform 220ms ease';
+              pieceEl.style.transform  = '';
+            });
+          });
+        }
+      }
+    }
   }
 
   renderPiecePanel(sq, piece) {
