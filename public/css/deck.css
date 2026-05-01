@@ -423,3 +423,180 @@ body {
   padding: 40px;
   font-size: 14px;
 }
+
+/* ─── ステップセクション ─────────────────────────────────── */
+.step-section {
+  margin-bottom: 16px;
+}
+
+.step-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.step-label-sub {
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 10px;
+}
+
+/* ─── クラス選択 ─────────────────────────────────────────── */
+.class-selector {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.class-btn {
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 2px solid rgba(255,255,255,0.1);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.class-btn:hover { border-color: var(--cls-color); color: var(--text-primary); }
+.class-btn.active {
+  background: var(--cls-color);
+  border-color: var(--cls-color);
+  color: #fff;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--cls-color) 50%, transparent);
+}
+
+/* ─── クラスバッジ（モーダル内） ─────────────────────────── */
+.class-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--cls-color);
+  color: #fff;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* ─── モーダルフィルター ─────────────────────────────────── */
+.modal-filter {
+  padding: 8px 16px 4px;
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ─── 盤面配置 ───────────────────────────────────────────── */
+.class-board-wrap {
+  background: var(--bg-panel);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+
+.class-board {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: opacity 0.2s;
+}
+
+.board-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+}
+
+.board-cell {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  background: var(--bg-base);
+  overflow: hidden;
+  position: relative;
+}
+.board-cell:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); }
+.board-cell.has-std { background: rgba(255,255,255,0.03); }
+.board-cell.has-class { border-color: var(--accent); background: rgba(233,69,96,0.12); }
+
+.cell-std-piece {
+  font-size: 20px;
+  opacity: 0.25;
+  line-height: 1;
+}
+
+.cell-empty {
+  font-size: 16px;
+  color: rgba(167,169,190,0.3);
+  line-height: 1;
+}
+
+.cell-class-piece {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  width: 100%;
+  height: 100%;
+  padding: 2px;
+  position: relative;
+}
+.cell-piece-name {
+  font-size: 8px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cell-remove {
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  font-size: 8px;
+  color: rgba(255,255,255,0.4);
+  display: none;
+}
+.board-cell.has-class:hover .cell-remove { display: block; }
+
+.class-board-legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-std { opacity: 0.35; font-size: 13px; }
+.legend-cls {
+  color: rgba(167,169,190,0.5);
+  font-size: 11px;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 3px;
+  padding: 0 3px;
+}
+
+/* ─── スロットのtype-name（旧class-nameから改名） ────────── */
+.slot-type-name {
+  font-size: 11px;
+  color: var(--text-muted);
+  width: 60px;
+  flex-shrink: 0;
+}
+
+/* ─── モーダル内削除オプション ───────────────────────────── */
+.modal-remove { color: var(--accent); }

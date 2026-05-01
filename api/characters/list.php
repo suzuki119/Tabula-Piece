@@ -20,6 +20,7 @@ $stmt = $db->prepare('
         c.id,
         c.name,
         c.piece_class,
+        c.class,
         c.rarity,
         c.active_skill_id,
         c.passive_skill_id,
@@ -44,6 +45,7 @@ foreach ($rows as $r) {
         'id'         => (int)$r['id'],
         'name'       => $r['name'],
         'piece_class'=> $r['piece_class'],
+        'class'      => $r['class'] ?? null,
         'rarity'     => $r['rarity'],
         'active_skill'  => $r['active_skill_id'] ? [
             'id'          => (int)$r['active_skill_id'],

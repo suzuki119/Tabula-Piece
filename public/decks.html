@@ -25,9 +25,34 @@
     <input type="text" class="deck-name-input" id="deck-name" value="マイデッキ" maxlength="24">
   </div>
 
-  <!-- スロット一覧 -->
-  <div class="deck-slots" id="deck-slots">
-    <!-- deck.js で生成 -->
+  <!-- STEP 1: クラス選択 -->
+  <div class="step-section">
+    <div class="step-label">STEP 1 ─ クラス選択</div>
+    <div class="class-selector" id="class-selector">
+      <!-- decks.js で生成 -->
+    </div>
+  </div>
+
+  <!-- STEP 2: 標準スロット -->
+  <div class="step-section">
+    <div class="step-label">STEP 2 ─ 駒キャラクター設定</div>
+    <div class="deck-slots" id="deck-slots">
+      <!-- decks.js で生成 -->
+    </div>
+  </div>
+
+  <!-- STEP 3: クラス駒配置 -->
+  <div class="step-section" id="class-board-section">
+    <div class="step-label">STEP 3 ─ クラス駒配置 <span class="step-label-sub">自陣に自由に配置</span></div>
+    <div class="class-board-wrap">
+      <div class="class-board" id="class-board">
+        <!-- decks.js で生成 -->
+      </div>
+      <div class="class-board-legend">
+        <span class="legend-item"><span class="legend-std">駒</span> 通常駒の初期位置</span>
+        <span class="legend-item"><span class="legend-cls">＋</span> クラス駒を配置</span>
+      </div>
+    </div>
   </div>
 
   <!-- アクションボタン -->
@@ -45,8 +70,9 @@
       <div class="modal-title" id="modal-title">キャラクターを選択</div>
       <button class="modal-close" id="modal-close">✕</button>
     </div>
+    <div class="modal-filter" id="modal-filter"></div>
     <div class="modal-body" id="modal-body">
-      <!-- deck.js で生成 -->
+      <!-- decks.js で生成 -->
     </div>
   </div>
 </div>
