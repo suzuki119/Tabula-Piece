@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>遊び方 — Tabula-Piece</title>
+  <link rel="stylesheet" href="css/deck.css">
+  <style>
+    .rules-container {
+      max-width: 640px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .rules-section {
+      background: var(--bg-panel);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .rules-section h2 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rules-section h2 .icon { font-size: 18px; }
+
+    .rules-body {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .rules-body p { margin-bottom: 8px; }
+    .rules-body p:last-child { margin-bottom: 0; }
+
+    .rules-body strong { color: var(--text-primary); }
+
+    .piece-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    .piece-table th {
+      text-align: left;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 6px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .piece-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: var(--text-muted);
+      vertical-align: top;
+    }
+
+    .piece-table .piece-col {
+      font-size: 20px;
+      text-align: center;
+      width: 40px;
+    }
+
+    .piece-table .name-col {
+      color: var(--text-primary);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .skill-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-right: 4px;
+    }
+    .skill-badge.active  { background: var(--accent); color: #fff; }
+    .skill-badge.passive { background: #5064dc; color: #fff; }
+
+    .highlight-box {
+      background: rgba(233, 69, 96, 0.08);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 6px 6px 0;
+      padding: 10px 14px;
+      margin-top: 10px;
+    }
+    .highlight-box p { margin: 0; }
+
+    @media (max-width: 420px) {
+      .rules-section { padding: 14px 14px; }
+      .piece-table .move-col { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="page-title">遊び方</div>
+  <nav class="nav-links">
+    <a href="home.html">ホーム</a>
+    <span id="user-name" class="nav-user"></span>
+    <button id="logout-btn" class="nav-logout">ログアウト</button>
+  </nav>
+</header>
+
+<div class="rules-container">
+
+  <!-- ゲーム概要 -->
+  <div class="rules-section">
+    <h2><span class="icon">♟</span>ゲーム概要</h2>
+    <div class="rules-body">
+      <p>Tabula-Piece は <strong>6×6 ボード</strong> で行う 2人対戦のチェス派生ゲームです。キャラクターを駒に割り当てることで、特殊スキルを使って戦います。</p>
+      <p>ゲームは <strong>最大 30ターン</strong>（交互に1手ずつ）で、先にキングを取るか、ターン終了時にポイントが高い方が勝利です。</p>
+    </div>
+  </div>
+
+  <!-- 勝利条件 -->
+  <div class="rules-section">
+    <h2><span class="icon">🏆</span>勝利条件</h2>
+    <div class="rules-body">
+      <p><strong>即時勝利</strong> — 相手のキングを取る（チェックメイトではなく、実際にキャプチャする）</p>
+      <p><strong>ポイント勝利</strong> — 最大ターン数が終了した時点で、獲得ポイントが多い方が勝利</p>
+      <p>ポイントは盤上の駒の価値の合計です（下表参照）。相手の駒を取ると相手のポイントが減ります。</p>
+      <div class="highlight-box">
+        <p>ポーン=1点 / ナイト=3点 / ビショップ=3点 / ルーク=5点 / クイーン=9点</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 駒の動き -->
+  <div class="rules-section">
+    <h2><span class="icon">♜</span>駒の動き</h2>
+    <div class="rules-body">
+      <p>6×6 ボード用に制約されています。キャスリングやアンパッサンはありません。</p>
+    </div>
+    <table class="piece-table">
+      <tr>
+        <th class="piece-col">駒</th>
+        <th class="name-col">名前</th>
+        <th class="move-col">動き方</th>
+      </tr>
+      <tr>
+        <td class="piece-col">♙</td>
+        <td class="name-col">ポーン</td>
+        <td>前方に1マス進む。斜め前1マスに敵を取れる。最終段でクイーンに昇格。</td>
+      </tr>
+      <tr>
+        <td class="piece-col">♘</td>
+        <td class="name-col">ナイト</td>
+        <td>L字型 (2+1) に跳ぶ。他の駒を飛び越せる。</td>
+      </tr>
+      <tr>
+        <td class="piece-col">♗</td>
+        <td class="name-col">ビショップ</td>
+        <td>斜め方向に何マスでも移動できる。</td>
+      </tr>
+      <tr>
+        <td class="piece-col">♖</td>
+        <td class="name-col">ルーク</td>
+        <td>縦横に何マスでも移動できる。</td>
+      </tr>
+      <tr>
+        <td class="piece-col">♕</td>
+        <td class="name-col">クイーン</td>
+        <td>縦・横・斜め全方向に何マスでも移動できる。最強の駒。</td>
+      </tr>
+      <tr>
+        <td class="piece-col">♔</td>
+        <td class="name-col">キング</td>
+        <td>1マスずつ全方向に移動できる。取られるとゲーム終了。</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- キャラクタースキル -->
+  <div class="rules-section">
+    <h2><span class="icon">✨</span>キャラクタースキル</h2>
+    <div class="rules-body">
+      <p>各駒にキャラクターを割り当てると、スキルが使えるようになります。</p>
+      <p>
+        <span class="skill-badge active">A</span><strong>アクティブスキル</strong> — 自分のターンに任意で発動できる。使用回数に制限あり。
+      </p>
+      <p>
+        <span class="skill-badge passive">P</span><strong>パッシブスキル</strong> — 条件を満たすと自動的に発動する。
+      </p>
+      <p>スキルを使うには、駒を選択してスキルボタンを押してください。スキルによってターンを消費するものと、消費しないものがあります。</p>
+    </div>
+  </div>
+
+  <!-- デッキ編成 -->
+  <div class="rules-section">
+    <h2><span class="icon">📋</span>デッキ編成</h2>
+    <div class="rules-body">
+      <p>対戦前に <strong>デッキ編成</strong> 画面でキャラクターを駒に割り当てます。</p>
+      <p><strong>スタンダード枠</strong> — ポーン・ナイト・ビショップ・ルーク・クイーンの5枠にそれぞれキャラクターを割り当て</p>
+      <p><strong>クラス枠</strong> — 特定の駒クラスに属するキャラクターを盤面の特定の位置に配置できる</p>
+      <p>キャラクターは <strong>ガチャ</strong> で入手できます。レアリティが高いほど強力なスキルを持ちます。</p>
+    </div>
+  </div>
+
+  <!-- ターンの流れ -->
+  <div class="rules-section">
+    <h2><span class="icon">⏱</span>ターンの流れ</h2>
+    <div class="rules-body">
+      <p>1. 駒をタップして選択 → 移動先をタップして移動</p>
+      <p>2. または、駒を選択してスキルボタンを押してスキルを発動</p>
+      <p>3. 各ターンには <strong>60秒</strong> の制限時間があります。時間切れになると自動で移動します</p>
+      <p>4. 相手のターン中は待機。相手が行動すると自動で更新されます</p>
+      <div class="highlight-box">
+        <p>降参したい場合は画面右上の「降参」ボタンを押してください。</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/auth.js"></script>
+<script>
+(async () => {
+  const user = await requireLogin();
+  if (!user) return;
+  document.getElementById('user-name').textContent = user.name;
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await fetch('../api/auth/logout.php', { method: 'POST', credentials: 'same-origin' });
+    location.href = 'login.html';
+  });
+})();
+</script>
+</body>
+</html>
