@@ -79,6 +79,17 @@ class BoardController {
     // 降参ボタン
     const surrenderBtn = document.getElementById('surrender-btn');
     if (surrenderBtn) surrenderBtn.addEventListener('click', () => this.surrender());
+
+    // サウンドボタン
+    const soundBtn = document.getElementById('sound-btn');
+    if (soundBtn) {
+      const updateSoundBtn = () => {
+        soundBtn.textContent = SoundManager.isEnabled() ? '🔊' : '🔇';
+        soundBtn.classList.toggle('muted', !SoundManager.isEnabled());
+      };
+      updateSoundBtn();
+      soundBtn.addEventListener('click', () => { SoundManager.toggle(); updateSoundBtn(); });
+    }
   }
 
   // ─── 起動 ────────────────────────────────────────────────
@@ -178,8 +189,13 @@ class BoardController {
     const t = this.$timerVal;
     t.textContent = this.timeLeft;
     t.className = '';
-    if (this.timeLeft <= 10)      t.classList.add('danger');
-    else if (this.timeLeft <= 20) t.classList.add('warn');
+    if (this.timeLeft <= 10) {
+      t.classList.add('danger');
+      if (this.timeLeft === 10 || this.timeLeft === 5) SoundManager.timerDanger();
+    } else if (this.timeLeft <= 20) {
+      t.classList.add('warn');
+      if (this.timeLeft === 20) SoundManager.timerWarn();
+    }
   }
 
   async onTimeout() {
@@ -200,6 +216,13 @@ class BoardController {
   async submitMove(from, to) {
     const fromCell = this.$board.querySelector(`[data-sq="${from}"]`);
     this._moveAnim = fromCell ? { from, to, fromRect: fromCell.getBoundingClientRect() } : null;
+
+    const targetPiece = this.state?.board?.[to];
+    if (targetPiece && targetPiece.color !== this.state.my_color) {
+      SoundManager.capture();
+    } else {
+      SoundManager.move();
+    }
 
     this.stopAll();
     this._setLoading(true);
@@ -252,6 +275,7 @@ class BoardController {
   }
 
   showSkillNotice(skillName) {
+    SoundManager.skill();
     const el = document.getElementById('skill-notice');
     if (!el) return;
     el.textContent = `${skillName} 発動！`;
@@ -916,6 +940,10 @@ class BoardController {
     this.stopAll();
     const isWin  = data.winner === this.state?.my_role || data.winner_id == this.userId;
     const isDraw = data.winner === 'draw' || data.winner === null;
+
+    if (isDraw) SoundManager.move();
+    else if (isWin) SoundManager.win();
+    else SoundManager.lose();
 
     this.$resultIcon.textContent  = isDraw ? '🤝' : isWin ? '🏆' : '💀';
     this.$resultTitle.textContent = isDraw ? '引き分け' : isWin ? '勝利！' : '敗北…';

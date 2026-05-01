@@ -605,6 +605,20 @@ body {
   opacity: 1;
 }
 
+/* ─── サウンドボタン ─────────────────────────────────────── */
+.sound-btn {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.6;
+  padding: 2px;
+  line-height: 1;
+  transition: opacity 0.15s;
+}
+.sound-btn:hover { opacity: 1; }
+.sound-btn.muted { opacity: 0.3; }
+
 /* ─── 降参ボタン ─────────────────────────────────────────── */
 .surrender-btn {
   background: transparent;
