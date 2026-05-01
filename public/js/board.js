@@ -84,8 +84,25 @@ class BoardController {
   // ─── 起動 ────────────────────────────────────────────────
 
   async init() {
+    this._requestNotificationPermission();
     await this.fetchState();
     this.startPollingOrTimer();
+  }
+
+  _requestNotificationPermission() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }
+
+  _notifyMyTurn() {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (document.visibilityState === 'visible') return;
+    new Notification('Tabula-Piece', {
+      body: 'あなたの番です！',
+      icon: 'favicon.ico',
+    });
   }
 
   // ─── 状態取得 ─────────────────────────────────────────────
@@ -132,7 +149,7 @@ class BoardController {
         if (this.state.is_my_turn || this.state.status === 'finished') {
           clearInterval(this.pollTimer);
           this.pollTimer = null;
-          if (this.state.is_my_turn) this.startCountdown();
+          if (this.state.is_my_turn) { this._notifyMyTurn(); this.startCountdown(); }
         }
       }, POLL_INTERVAL);
     }
