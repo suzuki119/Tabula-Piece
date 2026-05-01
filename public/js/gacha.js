@@ -68,7 +68,7 @@ async function pull(mode) {
       data.stones_remaining.toLocaleString();
     updateBtnState(data.stones_remaining);
   } catch (e) {
-    alert('エラー: ' + e.message);
+    showToast('エラー: ' + e.message);
     btn.disabled = false;
   }
   btn.classList.remove('loading');

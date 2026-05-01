@@ -83,7 +83,7 @@ async function startOnline() {
       pollStatus();
     }
   } catch (e) {
-    alert('エラー: ' + e.message);
+    showToast('エラー: ' + e.message);
     showModeSelect();
   }
 }
@@ -107,7 +107,7 @@ async function startRoomCreate() {
     document.getElementById('room-code-display').textContent = data.room_code;
     pollStatus();
   } catch (e) {
-    alert('エラー: ' + e.message);
+    showToast('エラー: ' + e.message);
     showModeSelect();
   }
 }

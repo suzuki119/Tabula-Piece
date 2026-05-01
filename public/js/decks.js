@@ -364,7 +364,7 @@ async function saveDeck() {
     btn.textContent = '保存済 ✓';
     setTimeout(() => { btn.textContent = '保存'; btn.disabled = false; }, 1500);
   } catch (e) {
-    alert('保存失敗: ' + e.message);
+    showToast('保存失敗: ' + e.message);
     btn.textContent = '保存';
     btn.disabled = false;
   }

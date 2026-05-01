@@ -580,6 +580,31 @@ body {
   opacity: 1;
 }
 
+/* エラー通知 */
+.error-notice {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: #b71c1c;
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  z-index: 210;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+  pointer-events: none;
+  max-width: 90%;
+  text-align: center;
+  white-space: pre-line;
+}
+.error-notice.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
 /* ─── 降参ボタン ─────────────────────────────────────────── */
 .surrender-btn {
   background: transparent;
@@ -594,4 +619,54 @@ body {
 .surrender-btn:hover {
   background: rgba(233,69,96,0.15);
   color: var(--accent);
+}
+
+/* ─── ローディングスピナー ───────────────────────────────── */
+.loading-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+.loading-overlay.show { display: flex; }
+
+.loading-spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── モバイル対応 ───────────────────────────────────────── */
+@media (max-width: 380px) {
+  body { padding: 10px; }
+
+  .match-container { gap: 8px; }
+
+  .player-bar { padding: 8px 12px; }
+  .player-bar .player-name { font-size: 13px; }
+  .player-bar .score-value { font-size: 14px; }
+  .player-bar .score-label { font-size: 9px; }
+
+  .board-wrapper { padding: 8px; }
+
+  .info-panel { padding: 8px 12px; gap: 6px; }
+  .info-item .value { font-size: 16px; }
+  .info-item .label { font-size: 10px; }
+
+  .piece-panel { padding: 10px 12px; }
+  .piece-panel .piece-icon { font-size: 26px; }
+  .piece-panel .piece-name { font-size: 13px; }
+
+  .skill-row { gap: 6px; }
+  .skill-btn { padding: 7px 10px; font-size: 11px; }
 }

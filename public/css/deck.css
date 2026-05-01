@@ -600,3 +600,35 @@ body {
 
 /* ─── モーダル内削除オプション ───────────────────────────── */
 .modal-remove { color: var(--accent); }
+
+/* ─── モバイル対応 ───────────────────────────────────────── */
+@media (max-width: 420px) {
+  body { padding: 10px; }
+
+  .page-header {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .page-title { font-size: 17px; }
+
+  .nav-links {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .nav-links a {
+    font-size: 12px;
+    margin-left: 6px;
+  }
+  .nav-user { display: none; }
+
+  .char-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .class-board-wrap { padding: 10px; }
+
+  .deck-slot { padding: 10px 12px; gap: 8px; }
+  .slot-piece { font-size: 22px; width: 28px; }
+  .slot-char-name { font-size: 13px; }
+}

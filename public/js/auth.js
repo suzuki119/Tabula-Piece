@@ -22,3 +22,28 @@ async function apiFetch(url, options = {}) {
   }
   return res;
 }
+
+function showToast(msg, type = 'error') {
+  const el = document.createElement('div');
+  const bg = type === 'error' ? '#b71c1c' : '#2e7d32';
+  Object.assign(el.style, {
+    position: 'fixed',
+    bottom: '24px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: bg,
+    color: '#fff',
+    padding: '8px 20px',
+    borderRadius: '8px',
+    fontWeight: '600',
+    fontSize: '13px',
+    zIndex: '999',
+    maxWidth: '90%',
+    textAlign: 'center',
+    boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+    animation: 'none',
+  });
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}

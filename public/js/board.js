@@ -70,6 +70,8 @@ class BoardController {
     this.$resultIcon  = document.getElementById('result-icon');
     this.$resultTitle = document.getElementById('result-title');
     this.$resultReason= document.getElementById('result-reason');
+    this.$loading     = document.getElementById('loading-overlay');
+    this.$errorNotice = document.getElementById('error-notice');
 
     const homeBtn = document.getElementById('home-btn');
     if (homeBtn) homeBtn.href = 'home.html';
@@ -180,6 +182,7 @@ class BoardController {
 
   async submitMove(from, to) {
     this.stopAll();
+    this._setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/move.php`, {
         method: 'POST',
@@ -187,12 +190,14 @@ class BoardController {
         body: JSON.stringify({ match_id: this.matchId, from, to }),
       });
       const data = await res.json();
-      if (!res.ok) { alert(data.error || '移動に失敗しました'); this.startPollingOrTimer(); return; }
+      if (!res.ok) { this.showError(data.error || '移動に失敗しました'); this.startPollingOrTimer(); return; }
 
       this._applyServerResponse(data);
     } catch (e) {
       console.error('移動送信失敗:', e);
       this.startPollingOrTimer();
+    } finally {
+      this._setLoading(false);
     }
   }
 
@@ -200,6 +205,7 @@ class BoardController {
 
   async submitSkill(from, skillId, target = null) {
     this.stopAll();
+    this._setLoading(true);
     try {
       const body = { match_id: this.matchId, from, skill_id: skillId };
       if (target) body.target = target;
@@ -210,9 +216,8 @@ class BoardController {
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (!res.ok) { alert(data.error || 'スキル発動に失敗しました'); this.startPollingOrTimer(); return; }
+      if (!res.ok) { this.showError(data.error || 'スキル発動に失敗しました'); this.startPollingOrTimer(); return; }
 
-      // スキルアニメーション的なフィードバック
       if (data.skill_name) {
         this.showSkillNotice(data.skill_name);
       }
@@ -221,6 +226,8 @@ class BoardController {
     } catch (e) {
       console.error('スキル送信失敗:', e);
       this.startPollingOrTimer();
+    } finally {
+      this._setLoading(false);
     }
   }
 
@@ -230,6 +237,19 @@ class BoardController {
     el.textContent = `${skillName} 発動！`;
     el.classList.add('show');
     setTimeout(() => el.classList.remove('show'), 2000);
+  }
+
+  _setLoading(show) {
+    if (this.$loading) this.$loading.classList.toggle('show', show);
+  }
+
+  showError(msg) {
+    const el = this.$errorNotice;
+    if (!el) { alert(msg); return; }
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(this._errorTimer);
+    this._errorTimer = setTimeout(() => el.classList.remove('show'), 3500);
   }
 
   _applyServerResponse(data) {
@@ -402,7 +422,7 @@ class BoardController {
         break;
       case SKILL.LIGHTNING_SLASH: {
         const targets = Chess.getKnightCaptureTargets(board, from, myColor);
-        if (targets.length === 0) { alert('ナイトの動きで攻撃できる相手駒がありません'); return; }
+        if (targets.length === 0) { this.showError('ナイトの動きで攻撃できる相手駒がありません'); return; }
         mode(SKILL_MODE.ANY_ENEMY, targets);
         break;
       }
@@ -478,13 +498,13 @@ class BoardController {
         break;
 
       default:
-        alert('このスキルはまだ実装されていません（ID: ' + skillId + '）');
+        this.showError('このスキルはまだ実装されていません（ID: ' + skillId + '）');
     }
   }
 
   startMultiSelect(from, skillId, targets, count) {
     if (targets.length === 0) {
-      alert('対象となるマスがありません');
+      this.showError('対象となるマスがありません');
       return;
     }
     this.multiSelectCount   = count;
@@ -494,7 +514,7 @@ class BoardController {
 
   enterSkillTargetMode(modeType, from, skillId, targets) {
     if (targets.length === 0) {
-      alert('対象となるマスがありません');
+      this.showError('対象となるマスがありません');
       return;
     }
     this.skillMode    = { type: modeType, from, skillId };
@@ -811,6 +831,7 @@ class BoardController {
 
   async skipSkillOpportunity() {
     this.stopAll();
+    this._setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/skill.php`, {
         method:  'POST',
@@ -818,16 +839,19 @@ class BoardController {
         body:    JSON.stringify({ match_id: this.matchId, from: '', skill_id: 0 }),
       });
       const data = await res.json();
-      if (!res.ok) { alert(data.error || 'スキップに失敗しました'); this.startPollingOrTimer(); return; }
+      if (!res.ok) { this.showError(data.error || 'スキップに失敗しました'); this.startPollingOrTimer(); return; }
       this._applyServerResponse(data);
     } catch (e) {
       console.error('スキップ失敗:', e);
       this.startPollingOrTimer();
+    } finally {
+      this._setLoading(false);
     }
   }
 
   async surrender() {
     if (!confirm('本当に降参しますか？')) return;
+    this._setLoading(true);
     try {
       const res  = await fetch(`${API_BASE}/../matches/surrender.php`, {
         method: 'POST',
@@ -839,7 +863,9 @@ class BoardController {
       if (data.error) throw new Error(data.error);
       this.showResult({ winner_id: data.winner_id, end_reason: 'surrender' });
     } catch (e) {
-      alert('降参処理に失敗しました: ' + e.message);
+      this.showError('降参処理に失敗しました: ' + e.message);
+    } finally {
+      this._setLoading(false);
     }
   }
 
