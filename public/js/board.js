@@ -17,13 +17,20 @@ const END_REASON_JA = {
   checkmate: 'キング撃破',
   points:    'ポイント勝負',
   timeout:   'タイムアウト',
+  surrender: '降参',
 };
 
 // スキルモードの種類
 const SKILL_MODE = {
-  TELEPORT: 'teleport', // 任意の空きマスを選択
-  ENHANCE:  'enhance',  // 隣接する味方駒を選択
-  TRAP:     'trap',     // 任意の空きマスを選択
+  TELEPORT:       'teleport',
+  ENHANCE:        'enhance',
+  TRAP:           'trap',
+  ADJACENT_EMPTY: 'adjacent_empty',
+  ADJACENT_ALLY:  'adjacent_ally',
+  ANY_ALLY:       'any_ally',
+  ADJACENT_ENEMY: 'adjacent_enemy',
+  ANY_ENEMY:      'any_enemy',
+  LINE_DIRECTION: 'line',
 };
 
 const API_BASE       = '../api/game';
@@ -37,8 +44,10 @@ class BoardController {
     this.state        = null;
     this.selected     = null;
     this.legalMoves   = [];
-    this.skillMode    = null;  // { type, from, skillId } or null
-    this.skillTargets = [];    // 選択可能なターゲットマス
+    this.skillMode          = null;  // { type, from, skillId } or null
+    this.skillTargets       = [];    // 選択可能なターゲットマス
+    this.multiSelectCount   = 0;     // 複数選択スキル用
+    this.multiSelectTargets = [];    // 選択済みターゲット
     this.pollTimer    = null;
     this.countdown    = null;
     this.timeLeft     = TURN_TIME_LIMIT;
@@ -226,14 +235,16 @@ class BoardController {
   _applyServerResponse(data) {
     this.state = {
       ...this.state,
-      board:             data.board,
-      traps:             data.traps ?? this.state.traps ?? {},
-      turn:              data.turn,
-      status:            data.status,
-      is_my_turn:        data.is_my_turn ?? false,
-      current_player:    data.current_player ?? (this.state.my_role === 'player1' ? 'player2' : 'player1'),
-      rematch_sq:        data.rematch_pending ? data.rematch_pending.sq : null,
-      skill_opportunity: data.skill_opportunity ?? null,
+      board:              data.board,
+      traps:              data.traps ?? this.state.traps ?? {},
+      timed_traps:        data.timed_traps ?? {},
+      timed_sanctuaries:  data.timed_sanctuaries ?? {},
+      turn:               data.turn,
+      status:             data.status,
+      is_my_turn:         data.is_my_turn ?? false,
+      current_player:     data.current_player ?? (this.state.my_role === 'player1' ? 'player2' : 'player1'),
+      rematch_sq:         data.rematch_pending ? data.rematch_pending.sq : null,
+      skill_opportunity:  data.skill_opportunity ?? null,
     };
 
     this.skillMode    = null;
@@ -267,13 +278,32 @@ class BoardController {
     if (this.skillMode) {
       if (this.skillTargets.includes(sq)) {
         const { from, skillId } = this.skillMode;
-        this.skillMode    = null;
-        this.skillTargets = [];
-        this.submitSkill(from, skillId, sq);
+
+        if (this.multiSelectCount > 0) {
+          this.multiSelectTargets.push(sq);
+          if (this.multiSelectTargets.length >= this.multiSelectCount) {
+            const target = this.multiSelectTargets.join(',');
+            this.skillMode          = null;
+            this.skillTargets       = [];
+            this.multiSelectCount   = 0;
+            this.multiSelectTargets = [];
+            this.submitSkill(from, skillId, target);
+          } else {
+            // 次の選択へ（選択済みを除外）
+            this.skillTargets = this.skillTargets.filter(s => !this.multiSelectTargets.includes(s));
+            this.renderBoard();
+          }
+        } else {
+          this.skillMode    = null;
+          this.skillTargets = [];
+          this.submitSkill(from, skillId, sq);
+        }
       } else {
         // ターゲット外クリックでキャンセル
-        this.skillMode    = null;
-        this.skillTargets = [];
+        this.skillMode          = null;
+        this.skillTargets       = [];
+        this.multiSelectCount   = 0;
+        this.multiSelectTargets = [];
         this.renderBoard();
         this.renderPiecePanel(null, null);
       }
@@ -322,37 +352,139 @@ class BoardController {
 
   onSkillClick(from, skillId) {
     const { SKILL } = Chess;
+    const board    = this.state.board;
+    const myColor  = this.state.my_color;
+
+    const instant = () => this.submitSkill(from, skillId);
+    const mode    = (modeType, targets) => {
+      this.enterSkillTargetMode(modeType, from, skillId, targets);
+    };
 
     switch (skillId) {
+      // ─ オリジナル ─────────────────────────────────────────
       case SKILL.SHIELD:
       case SKILL.VALUE_UP:
-        // ターゲット不要: 即発動
-        this.submitSkill(from, skillId);
-        break;
-
-      case SKILL.TELEPORT:
-        this.enterSkillTargetMode(SKILL_MODE.TELEPORT, from, skillId,
-          Chess.getTeleportTargets(this.state.board));
-        break;
-
-      case SKILL.ENHANCE:
-        this.enterSkillTargetMode(SKILL_MODE.ENHANCE, from, skillId,
-          Chess.getEnhanceTargets(this.state.board, from, this.state.my_color));
-        break;
-
-      case SKILL.TRAP:
-        this.enterSkillTargetMode(SKILL_MODE.TRAP, from, skillId,
-          Chess.getTrapTargets(this.state.board, from));
-        break;
-
       case SKILL.REMATCH:
-        // 再移動: 先に通常移動してから使う
-        this.submitSkill(from, skillId);
+        instant();
+        break;
+      case SKILL.TELEPORT:
+        mode(SKILL_MODE.TELEPORT, Chess.getTeleportTargets(board));
+        break;
+      case SKILL.ENHANCE:
+        mode(SKILL_MODE.ENHANCE, Chess.getEnhanceTargets(board, from, myColor));
+        break;
+      case SKILL.TRAP:
+        mode(SKILL_MODE.TRAP, Chess.getTrapTargets(board, from));
+        break;
+
+      // ─ 支援・回復系 ───────────────────────────────────────
+      case SKILL.HOLY_WALL:
+      case SKILL.HOLY_WALL_2:
+        mode(SKILL_MODE.ADJACENT_ALLY, Chess.getAdjacentAllyTargets(board, from, myColor));
+        break;
+      case SKILL.REVIVE:
+      case SKILL.REVIVE_SHIELD:
+        mode(SKILL_MODE.ADJACENT_EMPTY, Chess.getAdjacentEmptyTargets(board, from));
+        break;
+      case SKILL.SACRIFICE:
+      case SKILL.INSPIRE_ALL:
+        instant();
+        break;
+      case SKILL.INSPIRE:
+      case SKILL.INSPIRE_STRONG:
+        mode(SKILL_MODE.ADJACENT_ALLY, Chess.getAdjacentAllyTargets(board, from, myColor));
+        break;
+
+      // ─ 攻撃・貫通系 ──────────────────────────────────────
+      case SKILL.CLEAVE:
+      case SKILL.EXPLOSION:
+      case SKILL.LIGHTNING_SLASH:
+        instant();
+        break;
+      case SKILL.DOUBLE_STRIKE:
+      case SKILL.PIERCING_SLASH:
+        mode(SKILL_MODE.ADJACENT_ENEMY, Chess.getAdjacentEnemyTargets(board, from, myColor));
+        break;
+      case SKILL.SHADOW_CUT:
+      case SKILL.SWAMP_WAVE:
+        mode(SKILL_MODE.ANY_ENEMY, Chess.getRange2Targets(board, from, myColor));
+        break;
+      case SKILL.AREA_THRUST:
+        mode(SKILL_MODE.LINE_DIRECTION, Chess.getLineTargets(board, from));
+        break;
+
+      // ─ 価値操作系 ────────────────────────────────────────
+      case SKILL.VALUE_DOWN_SM:
+      case SKILL.VALUE_DOWN_MD:
+      case SKILL.VALUE_DOWN_LG:
+      case SKILL.CURSED_TRADE:
+        mode(SKILL_MODE.ANY_ENEMY, Chess.getAnyEnemyTargets(board, myColor));
+        break;
+      case SKILL.DECOY:
+        instant();
+        break;
+      case SKILL.VALUE_GRANT_MD:
+        mode(SKILL_MODE.ADJACENT_ALLY, Chess.getAdjacentAllyTargets(board, from, myColor));
+        break;
+      case SKILL.VALUE_GRANT_LG:
+        mode(SKILL_MODE.ANY_ALLY, Chess.getAnyAllyTargets(board, myColor));
+        break;
+
+      // ─ 罠・設置系 ────────────────────────────────────────
+      case SKILL.STUN_TRAP:
+      case SKILL.STUN_TRAP_STRONG:
+      case SKILL.FORCE_MOVE_TRAP:
+      case SKILL.MAZE_TRAP:
+      case SKILL.PHANTOM_TRAP:
+      case SKILL.FORTRESS:
+        mode(SKILL_MODE.ADJACENT_EMPTY, Chess.getAdjacentEmptyTargets(board, from));
+        break;
+      case SKILL.WIDE_TRAP:
+      case SKILL.FORTRESS_LARGE:
+        this.startMultiSelect(from, skillId, Chess.getAdjacentEmptyTargets(board, from), 2);
+        break;
+      case SKILL.FORTRESS_SELF:
+        instant();
+        break;
+
+      // ─ 支配・コピー系 ────────────────────────────────────
+      case SKILL.DOMINATE:
+      case SKILL.CHARM_LONG:
+      case SKILL.CHARM:
+      case SKILL.HINDER:
+      case SKILL.HINDER_STRONG:
+      case SKILL.FORCE_MOVE:
+      case SKILL.SKILL_STEAL:
+      case SKILL.MIMIC_WEAK:
+      case SKILL.FULL_MIMIC:
+      case SKILL.ASSAULT_DOMINATE:
+        mode(SKILL_MODE.ADJACENT_ENEMY, Chess.getAdjacentEnemyTargets(board, from, myColor));
+        break;
+      case SKILL.DISABLE:
+      case SKILL.CHAIN_STRONG:
+      case SKILL.CHAIN:
+      case SKILL.STUN:
+        mode(SKILL_MODE.ANY_ENEMY, Chess.getAnyEnemyTargets(board, myColor, true));
+        break;
+      case SKILL.INFECT:
+      case SKILL.STORM_STRIKE:
+      case SKILL.TIMED_SANCTUARY:
+        instant();
         break;
 
       default:
-        alert('このスキルはまだ実装されていません');
+        alert('このスキルはまだ実装されていません（ID: ' + skillId + '）');
     }
+  }
+
+  startMultiSelect(from, skillId, targets, count) {
+    if (targets.length === 0) {
+      alert('対象となるマスがありません');
+      return;
+    }
+    this.multiSelectCount   = count;
+    this.multiSelectTargets = [];
+    this.enterSkillTargetMode(SKILL_MODE.ADJACENT_EMPTY, from, skillId, targets);
   }
 
   enterSkillTargetMode(modeType, from, skillId, targets) {
@@ -366,11 +498,20 @@ class BoardController {
     this.legalMoves   = [];
     this.renderBoard();
 
-    const hint = {
-      [SKILL_MODE.TELEPORT]: '移動先の空きマスを選択',
-      [SKILL_MODE.ENHANCE]:  '強化する隣接の味方駒を選択',
-      [SKILL_MODE.TRAP]:     'トラップを置くマスを選択',
-    }[modeType] || 'ターゲットを選択';
+    const remaining = this.multiSelectCount > 0
+      ? `（${this.multiSelectTargets.length + 1}/${this.multiSelectCount}マス目）`
+      : '';
+    const hint = ({
+      [SKILL_MODE.TELEPORT]:       '移動先の空きマスを選択',
+      [SKILL_MODE.ENHANCE]:        '強化する隣接の味方駒を選択',
+      [SKILL_MODE.TRAP]:           'トラップを置くマスを選択',
+      [SKILL_MODE.ADJACENT_EMPTY]: `対象マスを選択${remaining}`,
+      [SKILL_MODE.ADJACENT_ALLY]:  '対象の味方駒を選択',
+      [SKILL_MODE.ANY_ALLY]:       '対象の味方駒を選択',
+      [SKILL_MODE.ADJACENT_ENEMY]: '対象の相手駒を選択',
+      [SKILL_MODE.ANY_ENEMY]:      '対象の相手駒を選択',
+      [SKILL_MODE.LINE_DIRECTION]: '方向を指定するマスを選択',
+    })[modeType] || 'ターゲットを選択';
 
     this.$piecePanel.innerHTML = `
       <div class="skill-target-hint">
@@ -381,10 +522,12 @@ class BoardController {
   }
 
   cancelSkillMode() {
-    this.skillMode    = null;
-    this.skillTargets = [];
-    this.selected     = null;
-    this.legalMoves   = [];
+    this.skillMode          = null;
+    this.skillTargets       = [];
+    this.multiSelectCount   = 0;
+    this.multiSelectTargets = [];
+    this.selected           = null;
+    this.legalMoves         = [];
     this.renderBoard();
     this.renderPiecePanel(null, null);
   }
@@ -473,6 +616,16 @@ class BoardController {
         // 自分のトラップ表示
         if (myTraps[sq]) cell.classList.add('my-trap');
 
+        // 時限トラップ表示
+        const timedTrapInfo = (s.timed_traps || {})[sq];
+        if (timedTrapInfo) {
+          cell.classList.add('my-timed-trap');
+          const badge = document.createElement('span');
+          badge.className = 'piece-badge timed-turns-badge';
+          badge.textContent = `⏱${timedTrapInfo.turns}T`;
+          cell.appendChild(badge);
+        }
+
         if (piece) {
           const span = document.createElement('span');
           span.className = 'piece';
@@ -506,6 +659,16 @@ class BoardController {
           }
         }
 
+        // 時限聖域表示
+        const timedSanctInfo = (s.timed_sanctuaries || {})[sq];
+        if (timedSanctInfo) {
+          cell.classList.add('timed-sanctuary');
+          const badge = document.createElement('span');
+          badge.className = 'piece-badge sanctuary-turns-badge';
+          badge.textContent = `${timedSanctInfo.turns}T`;
+          cell.appendChild(badge);
+        }
+
         // 再移動待機中のマス
         if (s.rematch_sq === sq) cell.classList.add('rematch-sq');
 
@@ -532,8 +695,8 @@ class BoardController {
     let activeSkillHtml = '';
     if (piece.active_skill_id) {
       const sk      = skillMaster[piece.active_skill_id];
-      const maxUses = sk?.max_uses ?? '∞';
-      const used    = piece.active_used || 0;
+      const maxUses   = sk?.max_uses ?? null;
+      const used      = piece.active_used || 0;
       const remaining = maxUses === null ? '∞' : Math.max(0, maxUses - used);
       const canUse  = isMyPiece && isMyTurn && !this.state.rematch_sq &&
                       (maxUses === null || used < maxUses);
@@ -566,11 +729,16 @@ class BoardController {
       `;
     }
 
-    // シールド・価値ボーナス表示
+    // ステータスバッジ表示
     let statusHtml = '';
-    if (piece.shield) statusHtml += `<span class="piece-status shield">🛡 シールド発動中</span>`;
-    if (piece.value_bonus > 0) statusHtml += `<span class="piece-status bonus">+${piece.value_bonus} 価値上昇中</span>`;
-    if (piece.value_bonus < 0) statusHtml += `<span class="piece-status debuff">${piece.value_bonus} 呪い中</span>`;
+    if (piece.shield)                               statusHtml += `<span class="piece-status shield">🛡 シールド発動中</span>`;
+    if ((piece.value_bonus || 0) > 0)               statusHtml += `<span class="piece-status bonus">+${piece.value_bonus} 価値上昇中</span>`;
+    if ((piece.value_bonus || 0) < 0)               statusHtml += `<span class="piece-status debuff">${piece.value_bonus} 呪い中</span>`;
+    if ((piece.stunned_turns || 0) > 0)             statusHtml += `<span class="piece-status stunned">⚡ 行動封じ中（${piece.stunned_turns}T）</span>`;
+    if (piece.fortress)                             statusHtml += `<span class="piece-status fortress">🏰 要塞化中（移動不可）</span>`;
+    if ((piece.charmed_turns || 0) > 0)             statusHtml += `<span class="piece-status charmed">💜 魅了中（${piece.charmed_turns}T）</span>`;
+    if ((piece.skill_sealed_turns || 0) > 0)        statusHtml += `<span class="piece-status sealed">🔒 スキル封印中（${piece.skill_sealed_turns}T）</span>`;
+    if ((piece.move_bonus_turns || 0) > 0)          statusHtml += `<span class="piece-status move-up">👟 移動強化中（${piece.move_bonus_turns}T）</span>`;
 
     this.$piecePanel.innerHTML = `
       <div class="piece-panel-inner">
@@ -659,11 +827,12 @@ class BoardController {
       const res  = await fetch(`${API_BASE}/../matches/surrender.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({ match_id: this.matchId }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      this.showResult({ winner_id: data.winner_id, end_reason: 'checkmate' });
+      this.showResult({ winner_id: data.winner_id, end_reason: 'surrender' });
     } catch (e) {
       alert('降参処理に失敗しました: ' + e.message);
     }

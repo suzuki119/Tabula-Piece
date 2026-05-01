@@ -36,11 +36,13 @@ $stmt->execute([$matchId]);
 $bs = $stmt->fetch();
 if (!$bs) jsonError(500, '盤面データが見つかりません');
 
-$gameData    = Chess::decodeGameData($bs['board_json']);
-$board       = $gameData['board'];
-$traps       = $gameData['traps'];
-$rematch     = $gameData['rematchPending'];
-$opportunity = $gameData['skillOpportunity'];
+$gameData        = Chess::decodeGameData($bs['board_json']);
+$board           = $gameData['board'];
+$traps           = $gameData['traps'];
+$timedTraps      = $gameData['timedTraps'];
+$timedSanctuaries= $gameData['timedSanctuaries'];
+$rematch         = $gameData['rematchPending'];
+$opportunity     = $gameData['skillOpportunity'];
 
 // 手番判定（再移動・スキル機会ペンディング中も自分の手番）
 $isMyTurn = false;
@@ -75,11 +77,29 @@ $myName = ($stmt->fetch()['name'] ?? 'あなた');
 // スキルマスターデータを埋め込む（フロントがDBを参照しなくて済む）
 $skillMaster = Chess::SKILL_DATA;
 
-// 自分のトラップのみ表示（相手のトラップは見えない）
-$myColor     = $myRole === 'player1' ? 'white' : 'black';
+$myColor = $myRole === 'player1' ? 'white' : 'black';
+
+// 罠感知スキルを持つ駒があるか確認
+$hasTrapSense = false;
+foreach ($board as $p) {
+    if ($p && $p['color'] === $myColor &&
+        (($p['passive_skill_id'] ?? null) === Chess::SKILL_TRAP_SENSE ||
+         ($p['copied_passive'] ?? null) === Chess::SKILL_TRAP_SENSE)) {
+        $hasTrapSense = true;
+        break;
+    }
+}
+
+// 自分のトラップのみ表示（罠感知がある場合は相手のも見える）
 $visibleTraps = [];
 foreach ($traps as $sq => $owner) {
-    if ($owner === $myColor) $visibleTraps[$sq] = $owner;
+    if ($owner === $myColor || $hasTrapSense) $visibleTraps[$sq] = $owner;
+}
+$visibleTimedTraps = [];
+foreach ($timedTraps as $sq => $info) {
+    if (($info['color'] ?? '') === $myColor || $hasTrapSense) {
+        $visibleTimedTraps[$sq] = $info;
+    }
 }
 
 echo json_encode([
@@ -96,8 +116,10 @@ echo json_encode([
     'winner'          => $match['winner_id'],
     'end_reason'      => $match['end_reason'],
     'board'           => $board,
-    'traps'            => $visibleTraps,    // 自分のトラップのみ
-    'rematch_sq'       => $myRematchSq,    // 再移動待機中のマス（自分の場合のみ）
-    'skill_opportunity'=> $myOpportunity,  // スキル機会（自分の場合のみ）
-    'skill_master'     => $skillMaster,    // スキルマスターデータ
+    'traps'            => $visibleTraps,        // 自分のトラップのみ（罠感知あれば全て）
+    'timed_traps'      => $visibleTimedTraps,   // タイムドトラップ
+    'timed_sanctuaries'=> $timedSanctuaries,    // 時限聖域
+    'rematch_sq'       => $myRematchSq,         // 再移動待機中のマス（自分の場合のみ）
+    'skill_opportunity'=> $myOpportunity,       // スキル機会（自分の場合のみ）
+    'skill_master'     => $skillMaster,         // スキルマスターデータ
 ]);

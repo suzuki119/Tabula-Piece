@@ -56,6 +56,9 @@ $gameData = Chess::decodeGameData($bs['board_json']);
 $state = [
     'board'            => $gameData['board'],
     'traps'            => $gameData['traps'],
+    'timedTraps'       => $gameData['timedTraps'],
+    'timedSanctuaries' => $gameData['timedSanctuaries'],
+    'captured'         => $gameData['captured'],
     'rematchPending'   => $gameData['rematchPending'],
     'skillOpportunity' => $gameData['skillOpportunity'],
     'currentPlayer'    => $match['current_player'],
@@ -97,16 +100,32 @@ if ($skillId === 0) {
         jsonError(500, 'DB更新に失敗しました: ' . $e->getMessage());
     }
 
+    $myColor = $player === 'player1' ? 'white' : 'black';
+    $hasTrapSense = false;
+    foreach ($newState['board'] as $_p) {
+        if ($_p && $_p['color'] === $myColor &&
+            (($_p['passive_skill_id'] ?? null) === Chess::SKILL_TRAP_SENSE ||
+             ($_p['copied_passive']   ?? null) === Chess::SKILL_TRAP_SENSE)) {
+            $hasTrapSense = true; break;
+        }
+    }
+    $visibleTimedTraps = [];
+    foreach (($newState['timedTraps'] ?? []) as $_sq => $_info) {
+        if (($_info['color'] ?? '') === $myColor || $hasTrapSense) $visibleTimedTraps[$_sq] = $_info;
+    }
+
     echo json_encode([
-        'success'          => true,
-        'skipped'          => true,
-        'turn'             => $newState['turn'],
-        'board'            => $newState['board'],
-        'traps'            => $newState['traps'],
-        'rematch_pending'  => null,
-        'skill_opportunity'=> null,
-        'current_player'   => $newState['currentPlayer'],
-        'is_my_turn'       => false,
+        'success'           => true,
+        'skipped'           => true,
+        'turn'              => $newState['turn'],
+        'board'             => $newState['board'],
+        'traps'             => $newState['traps'],
+        'timed_traps'       => $visibleTimedTraps,
+        'timed_sanctuaries' => $newState['timedSanctuaries'] ?? [],
+        'rematch_pending'   => null,
+        'skill_opportunity' => null,
+        'current_player'    => $newState['currentPlayer'],
+        'is_my_turn'        => false,
     ]);
     exit;
 }
@@ -147,14 +166,30 @@ try {
 
 $skillData = Chess::SKILL_DATA[$skillId] ?? null;
 
+$myColor = $player === 'player1' ? 'white' : 'black';
+$hasTrapSense = false;
+foreach ($newState['board'] as $_p) {
+    if ($_p && $_p['color'] === $myColor &&
+        (($_p['passive_skill_id'] ?? null) === Chess::SKILL_TRAP_SENSE ||
+         ($_p['copied_passive']   ?? null) === Chess::SKILL_TRAP_SENSE)) {
+        $hasTrapSense = true; break;
+    }
+}
+$visibleTimedTraps = [];
+foreach (($newState['timedTraps'] ?? []) as $_sq => $_info) {
+    if (($_info['color'] ?? '') === $myColor || $hasTrapSense) $visibleTimedTraps[$_sq] = $_info;
+}
+
 echo json_encode([
-    'success'          => true,
-    'skill_name'       => $skillData['name'] ?? '',
-    'turn'             => $newState['turn'],
-    'board'            => $newState['board'],
-    'traps'            => $newState['traps'],
-    'rematch_pending'  => $newState['rematchPending'],
-    'skill_opportunity'=> $newState['skillOpportunity'],
-    'current_player'   => $newState['currentPlayer'],
-    'is_my_turn'       => $newState['currentPlayer'] === $player,
+    'success'           => true,
+    'skill_name'        => $skillData['name'] ?? '',
+    'turn'              => $newState['turn'],
+    'board'             => $newState['board'],
+    'traps'             => $newState['traps'],
+    'timed_traps'       => $visibleTimedTraps,
+    'timed_sanctuaries' => $newState['timedSanctuaries'] ?? [],
+    'rematch_pending'   => $newState['rematchPending'],
+    'skill_opportunity' => $newState['skillOpportunity'],
+    'current_player'    => $newState['currentPlayer'],
+    'is_my_turn'        => $newState['currentPlayer'] === $player,
 ]);

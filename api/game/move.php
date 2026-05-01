@@ -55,14 +55,17 @@ $gameData = Chess::decodeGameData($bs['board_json']);
 $state = [
     'board'            => $gameData['board'],
     'traps'            => $gameData['traps'],
+    'timedTraps'       => $gameData['timedTraps'],
+    'timedSanctuaries' => $gameData['timedSanctuaries'],
+    'captured'         => $gameData['captured'],
     'rematchPending'   => $gameData['rematchPending'],
     'skillOpportunity' => $gameData['skillOpportunity'],
     'currentPlayer'    => $match['current_player'],
-    'turn'           => (int)$match['current_turn'],
-    'maxTurns'       => 30,
-    'status'         => $match['status'],
-    'winner'         => null,
-    'endReason'      => null,
+    'turn'             => (int)$match['current_turn'],
+    'maxTurns'         => 30,
+    'status'           => $match['status'],
+    'winner'           => null,
+    'endReason'        => null,
 ];
 
 // ─── 移動実行 ────────────────────────────────────────────────
@@ -110,16 +113,32 @@ try {
 
 // ─── レスポンス ──────────────────────────────────────────────
 
+$myColor = $player === 'player1' ? 'white' : 'black';
+$hasTrapSense = false;
+foreach ($newState['board'] as $p) {
+    if ($p && $p['color'] === $myColor &&
+        (($p['passive_skill_id'] ?? null) === Chess::SKILL_TRAP_SENSE ||
+         ($p['copied_passive']   ?? null) === Chess::SKILL_TRAP_SENSE)) {
+        $hasTrapSense = true; break;
+    }
+}
+$visibleTimedTraps = [];
+foreach (($newState['timedTraps'] ?? []) as $sq => $info) {
+    if (($info['color'] ?? '') === $myColor || $hasTrapSense) $visibleTimedTraps[$sq] = $info;
+}
+
 echo json_encode([
-    'success'          => true,
-    'turn'             => $newState['turn'],
-    'status'           => $newState['status'],
-    'winner'           => $newState['winner'],
-    'endReason'        => $newState['endReason'],
-    'board'            => $newState['board'],
-    'traps'            => $newState['traps'],
-    'rematch_pending'  => $newState['rematchPending'],
-    'skill_opportunity'=> $newState['skillOpportunity'],
-    'is_my_turn'       => $newState['currentPlayer'] === $player,
-    'current_player'   => $newState['currentPlayer'],
+    'success'           => true,
+    'turn'              => $newState['turn'],
+    'status'            => $newState['status'],
+    'winner'            => $newState['winner'],
+    'endReason'         => $newState['endReason'],
+    'board'             => $newState['board'],
+    'traps'             => $newState['traps'],
+    'timed_traps'       => $visibleTimedTraps,
+    'timed_sanctuaries' => $newState['timedSanctuaries'] ?? [],
+    'rematch_pending'   => $newState['rematchPending'],
+    'skill_opportunity' => $newState['skillOpportunity'],
+    'is_my_turn'        => $newState['currentPlayer'] === $player,
+    'current_player'    => $newState['currentPlayer'],
 ]);
