@@ -14,7 +14,8 @@ const SoundManager = (() => {
   function tone(freq, dur, type = 'sine', gain = 0.15, delay = 0) {
     if (!enabled) return;
     try {
-      const ac  = getCtx();
+      const ac = getCtx();
+      if (ac.state === 'suspended') ac.resume();
       const osc = ac.createOscillator();
       const env = ac.createGain();
       osc.type = type;

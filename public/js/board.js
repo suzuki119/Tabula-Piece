@@ -110,10 +110,9 @@ class BoardController {
   _notifyMyTurn() {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     if (document.visibilityState === 'visible') return;
-    new Notification('Tabula-Piece', {
-      body: 'あなたの番です！',
-      icon: 'favicon.ico',
-    });
+    try {
+      new Notification('Tabula-Piece', { body: 'あなたの番です！' });
+    } catch (_) {}
   }
 
   // ─── 状態取得 ─────────────────────────────────────────────
@@ -233,11 +232,18 @@ class BoardController {
         body: JSON.stringify({ match_id: this.matchId, from, to }),
       });
       const data = await res.json();
-      if (!res.ok) { this.showError(data.error || '移動に失敗しました'); this.startPollingOrTimer(); return; }
+      if (!res.ok) {
+        this._moveAnim = null;
+        this.showError(data.error || '移動に失敗しました');
+        this.startPollingOrTimer();
+        return;
+      }
 
       this._applyServerResponse(data);
     } catch (e) {
+      this._moveAnim = null;
       console.error('移動送信失敗:', e);
+      this.showError('通信エラー: ' + (e.message || ''));
       this.startPollingOrTimer();
     } finally {
       this._setLoading(false);
@@ -268,6 +274,7 @@ class BoardController {
       this._applyServerResponse(data);
     } catch (e) {
       console.error('スキル送信失敗:', e);
+      this.showError('通信エラー: ' + (e.message || ''));
       this.startPollingOrTimer();
     } finally {
       this._setLoading(false);

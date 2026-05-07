@@ -24,11 +24,13 @@ async function apiFetch(url, options = {}) {
 }
 
 function showToast(msg, type = 'error') {
+  const existing = document.querySelectorAll('.app-toast').length;
   const el = document.createElement('div');
+  el.className = 'app-toast';
   const bg = type === 'error' ? '#b71c1c' : '#2e7d32';
   Object.assign(el.style, {
     position: 'fixed',
-    bottom: '24px',
+    bottom: (24 + existing * 48) + 'px',
     left: '50%',
     transform: 'translateX(-50%)',
     background: bg,
@@ -41,7 +43,6 @@ function showToast(msg, type = 'error') {
     maxWidth: '90%',
     textAlign: 'center',
     boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
-    animation: 'none',
   });
   el.textContent = msg;
   document.body.appendChild(el);
