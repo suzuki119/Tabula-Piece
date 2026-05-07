@@ -28,7 +28,25 @@ $stmt = $db->prepare('SELECT id FROM decks WHERE id = ? AND user_id = ? LIMIT 1'
 $stmt->execute([$deckId, $userId]);
 if (!$stmt->fetch()) jsonError(404, 'デッキが見つかりません');
 
-// 自分が作成済みの待機試合があれば返す（重複防止）
+// 1. 他のユーザーが作成した待機試合を最優先で探す（マッチング成立を優先）
+$stmt = $db->prepare('SELECT id FROM matches WHERE player1_id != ? AND status = "waiting" AND player2_id IS NULL AND room_code IS NULL ORDER BY id ASC LIMIT 1');
+$stmt->execute([$userId]);
+$waitingMatch = $stmt->fetch();
+
+if ($waitingMatch) {
+    try {
+        $result = joinAndStartMatch($db, (int)$waitingMatch['id'], $userId, $deckId);
+        // 自分の古い待機試合があれば破棄
+        $cleanup = $db->prepare('DELETE FROM matches WHERE player1_id = ? AND status = "waiting" AND player2_id IS NULL AND room_code IS NULL');
+        $cleanup->execute([$userId]);
+        echo json_encode(['status' => 'matched', 'match_id' => $result['match_id'], 'player_role' => 'player2']);
+        exit;
+    } catch (Exception $_) {
+        // 競合（他のユーザーが先に参加）→ フォールスルーして自分の待機を返す/作成
+    }
+}
+
+// 2. 自分が作成済みの待機試合があれば再利用
 $stmt = $db->prepare('SELECT id FROM matches WHERE player1_id = ? AND status = "waiting" AND player2_id IS NULL AND room_code IS NULL ORDER BY id DESC LIMIT 1');
 $stmt->execute([$userId]);
 $existing = $stmt->fetch();
@@ -37,22 +55,6 @@ if ($existing) {
     exit;
 }
 
-// 他のユーザーが作成した待機試合を探す
-$stmt = $db->prepare('SELECT id FROM matches WHERE player1_id != ? AND status = "waiting" AND player2_id IS NULL AND room_code IS NULL ORDER BY id ASC LIMIT 1');
-$stmt->execute([$userId]);
-$waitingMatch = $stmt->fetch();
-
-if ($waitingMatch) {
-    try {
-        $result = joinAndStartMatch($db, (int)$waitingMatch['id'], $userId, $deckId);
-        echo json_encode(['status' => 'matched', 'match_id' => $result['match_id'], 'player_role' => 'player2']);
-    } catch (Exception $e) {
-        // 競合（他のユーザーが先に参加）→ 新規待機へ
-        $matchId = createWaitingMatch($db, $userId, $deckId);
-        echo json_encode(['status' => 'waiting', 'match_id' => $matchId]);
-    }
-} else {
-    // 待機試合なし → 新規作成
-    $matchId = createWaitingMatch($db, $userId, $deckId);
-    echo json_encode(['status' => 'waiting', 'match_id' => $matchId]);
-}
+// 3. 新規待機試合を作成
+$matchId = createWaitingMatch($db, $userId, $deckId);
+echo json_encode(['status' => 'waiting', 'match_id' => $matchId]);
