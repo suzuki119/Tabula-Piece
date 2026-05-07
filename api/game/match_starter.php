@@ -57,7 +57,7 @@ function joinAndStartMatch(PDO $db, int $matchId, int $player2Id, int $player2De
 
         $charMap = [];
         if ($allCharIds) {
-            $unique = array_unique($allCharIds);
+            $unique = array_values(array_unique($allCharIds));
             $placeholders = implode(',', array_fill(0, count($unique), '?'));
             $stmt = $db->prepare("SELECT id, piece_class, active_skill_id, passive_skill_id FROM characters WHERE id IN ($placeholders)");
             $stmt->execute($unique);

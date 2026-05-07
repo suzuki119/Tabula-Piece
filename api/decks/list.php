@@ -27,7 +27,8 @@ foreach ($decks as $d) {
 
 $charMap = [];
 if ($charIds) {
-    $placeholders = implode(',', array_fill(0, count($charIds), '?'));
+    $unique = array_values(array_unique($charIds));
+    $placeholders = implode(',', array_fill(0, count($unique), '?'));
     $stmt = $db->prepare("
         SELECT c.*, sa.name AS active_skill_name, sp.name AS passive_skill_name
         FROM characters c
@@ -35,7 +36,7 @@ if ($charIds) {
         LEFT JOIN skills sp ON sp.id = c.passive_skill_id
         WHERE c.id IN ($placeholders)
     ");
-    $stmt->execute(array_unique($charIds));
+    $stmt->execute($unique);
     foreach ($stmt->fetchAll() as $c) {
         $charMap[(int)$c['id']] = [
             'id'                 => (int)$c['id'],
