@@ -483,12 +483,13 @@ https://example.com/tabula-piece/public/home.html?user_id=1
 | Phase 12 | クラスシステム デッキ構築UI拡張  | ✅ 完了 |
 | Phase 13 | クラスシステム 対戦ロジック拡張  | ✅ 完了 |
 | Phase 14 | UX改善（モバイル対応・ローディング・エラーUI・通知・アニメ・サウンド・遊び方） | ✅ 完了 |
+| Phase 15 | クエストモード（PvE章立て・CPU対戦・報酬システム） | ✅ 完了 |
 
 ### 今後の候補機能
 
 - キャラクターイラスト（プロンプト作成済）
-- クエストモード
 - 本番サーバーデプロイ（ロリポップ）
+- クエストの章・ステージ追加（現在 Chapter 1 のみ）
 
 ---
 
@@ -874,4 +875,59 @@ https://example.com/tabula-piece/public/home.html?user_id=1
 
 ---
 
-_最終更新：2026-04-30_
+## 19. クエストモード（Phase 15）
+
+### 概要
+
+PvE（CPU対戦）の章立てモード。ユーザーは編成済みのデッキでCPUと対戦し、勝利するとガチャ石とキャラクターを獲得できる。
+
+### データ構造
+
+- `quests`: 章/ステージ/難易度/CPUデッキ/報酬
+  - `cpu_deck_json` には `{pawn,knight,bishop,rook,queen,king}` のキャラID
+  - `reward_gem` は毎回付与、`reward_character_id` は初回クリアのみ付与
+- `quest_clears`: ユーザーごとのクリア記録（UNIQUE: user_id × quest_id）
+- `matches` に `quest_id` / `is_cpu_match` 列を追加
+- CPUユーザー: `users.id = 99999`（固定）
+
+### AI仕様（`api/game/CpuAi.php`）
+
+- 合法手を全列挙し、評価関数でベスト1手を選択
+- 評価項目:
+  - 相手キング捕獲: +10000（即勝ち）
+  - 駒捕獲: 駒価値×10（シールド持ちは-8減点）
+  - 前進: ポーン +0.8、その他 +0.3、キング -0.5
+  - 中央寄せ: 列c/d +0.4、行3/4 +0.3
+  - クイーン温存: 非捕獲時 -0.5
+  - 小ランダム: 0〜0.1
+- スキル機会は常にスキップ（CPUは能動スキルを使わない）
+
+### フロー
+
+1. `quest.html` → `/api/quest/list.php` で章/ステージ一覧表示
+2. ステージタップ → デッキ選択モーダル
+3. `/api/quest/start.php` がCPUユーザーを相手にmatchを作成（`is_cpu_match=1`）
+4. `match.html` に遷移、`board.js` が`is_cpu_match`を検出
+5. 自分の手の後、`/api/quest/cpu_turn.php` を呼び出し、CPUの手番を進める
+6. 試合終了時に勝利していれば報酬付与・`quest_clears`記録
+
+### 初期クエスト（Chapter 1）
+
+| ステージ | 名前 | 難易度 | CPUクラス | 報酬 |
+|----------|------|--------|-----------|------|
+| 1 | 訓練場の対戦 | ★ | ニュートラルN | 💎 50 |
+| 2 | 熟練の挑戦者 | ★★ | ニュートラルR | 💎 100 |
+| 3 | 章ボス: 黒の魔女 | ★★★ | ウィッチ | 💎 200 + 不死の王（初回のみ） |
+
+### 関連ファイル
+
+| 種類 | パス |
+|------|------|
+| マイグレーション | `db/010_quest.sql` |
+| バックエンド | `api/quest/list.php`, `start.php`, `cpu_turn.php`, `api/game/CpuAi.php` |
+| 画面 | `public/quest.html`, `js/quest.js`, `css/quest.css` |
+| 既存ファイル拡張 | `api/game/state.php`（is_cpu_match返却）, `public/js/board.js`（CPU連携）, `public/home.html`（ナビ追加）, `public/match.html`（quest.css読込） |
+
+---
+
+_最終更新：2026-05-31_

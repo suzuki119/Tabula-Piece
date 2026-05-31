@@ -23,6 +23,8 @@ $stmt = $db->query('
     FROM users u
     JOIN matches m ON (m.player1_id = u.id OR m.player2_id = u.id)
     WHERE m.status = \'finished\'
+      AND m.is_cpu_match = 0
+      AND u.id != 99999
     GROUP BY u.id, u.name
     ORDER BY wins DESC, total ASC
     LIMIT 50
@@ -58,6 +60,7 @@ $myStmt = $db->prepare('
     FROM matches m
     WHERE (m.player1_id = ? OR m.player2_id = ?)
       AND m.status = \'finished\'
+      AND m.is_cpu_match = 0
 ');
 $myStmt->execute([$myUserId, $myUserId, $myUserId, $myUserId, $myUserId, $myUserId, $myUserId, $myUserId]);
 $my = $myStmt->fetch();

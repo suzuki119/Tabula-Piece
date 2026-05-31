@@ -115,6 +115,8 @@ echo json_encode([
     'status'          => $match['status'],
     'winner'          => $match['winner_id'],
     'end_reason'      => $match['end_reason'],
+    'is_cpu_match'    => (int)($match['is_cpu_match'] ?? 0) === 1,
+    'quest_id'        => $match['quest_id'] !== null ? (int)$match['quest_id'] : null,
     'board'           => $board,
     'traps'            => $visibleTraps,        // 自分のトラップのみ（罠感知あれば全て）
     'timed_traps'      => $visibleTimedTraps,   // タイムドトラップ

@@ -153,6 +153,9 @@ class BoardController {
 
     if (this.state.is_my_turn) {
       this.startCountdown();
+    } else if (this.state.is_cpu_match) {
+      // CPU 対戦: ポーリングではなく cpu_turn を呼び出してターンを進める
+      this.runCpuTurn();
     } else {
       this.pollTimer = setInterval(async () => {
         await this.fetchState();
@@ -162,6 +165,60 @@ class BoardController {
           if (this.state.is_my_turn) { this._notifyMyTurn(); this.startCountdown(); }
         }
       }, POLL_INTERVAL);
+    }
+  }
+
+  async runCpuTurn() {
+    this._setLoading(true);
+    try {
+      const res = await fetch('../api/quest/cpu_turn.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ match_id: this.matchId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        this.showError(data.error || 'CPUの応答に失敗しました');
+        return;
+      }
+      if (data.noop) return; // 既に終了済み
+
+      if (Array.isArray(data.cpu_moves) && data.cpu_moves.length) {
+        const last = data.cpu_moves[data.cpu_moves.length - 1];
+        const captured = !!(last && this.state?.board?.[last.to] && this.state.board[last.to].color === this.state.my_color);
+        if (captured) SoundManager.capture(); else SoundManager.move();
+      }
+
+      this.state = {
+        ...this.state,
+        board:             data.board ?? this.state.board,
+        traps:             data.traps ?? this.state.traps ?? {},
+        timed_traps:       data.timed_traps ?? {},
+        timed_sanctuaries: data.timed_sanctuaries ?? {},
+        turn:              data.turn ?? this.state.turn,
+        status:            data.finished ? 'finished' : 'in_progress',
+        is_my_turn:        data.is_my_turn ?? true,
+        current_player:    data.current_player ?? 'player1',
+        rematch_sq:        null,
+        skill_opportunity: null,
+      };
+      this._syncPendingSelection();
+      this.render();
+
+      if (data.finished) {
+        this.showResult({
+          winner:     data.winner,
+          end_reason: data.end_reason,
+          reward:     data.reward,
+        });
+      } else if (this.state.is_my_turn) {
+        this.startCountdown();
+      }
+    } catch (e) {
+      console.error('CPUターン取得失敗:', e);
+      this.showError('通信エラー: ' + (e.message || ''));
+    } finally {
+      this._setLoading(false);
     }
   }
 
@@ -957,7 +1014,36 @@ class BoardController {
     this.$resultReason.textContent =
       END_REASON_JA[data.end_reason || data.endReason] || '';
 
+    this._renderQuestReward(data.reward);
+
     this.$overlay.classList.add('show');
+  }
+
+  _renderQuestReward(reward) {
+    const card = this.$overlay.querySelector('.quest-reward-card');
+    if (card) card.remove();
+    if (!reward || reward.error) return;
+
+    const charLine = reward.character_name
+      ? `<span class="quest-reward-card-char">★ 新キャラ解放: ${this._escapeHtml(reward.character_name)}</span>`
+      : '';
+    const firstClear = reward.first_clear ? '<span style="color:var(--gold);font-weight:700;">初回クリア！ </span>' : '';
+
+    const el = document.createElement('div');
+    el.className = 'quest-reward-card';
+    el.innerHTML = `
+      <div class="quest-reward-card-title">クエスト報酬</div>
+      <div class="quest-reward-card-body">${firstClear}💎 ${reward.gem || 0} ガチャ石を獲得</div>
+      ${charLine}
+    `;
+    const overlayCard = this.$overlay.querySelector('.overlay-card');
+    if (overlayCard) overlayCard.insertBefore(el, overlayCard.querySelector('#home-btn'));
+  }
+
+  _escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
   }
 }
 

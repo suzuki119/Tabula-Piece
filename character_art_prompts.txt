@@ -1,0 +1,636 @@
+========================================
+Tabula-Piece キャラクターイラスト プロンプト集
+========================================
+
+【共通スタイル】全プロンプトの末尾に追記する
+----------------------------------------
+fantasy trading card game illustration, anime art style, upper body portrait,
+dynamic lighting, vibrant colors, detailed linework, clean background with
+gradient matching character class color, high quality digital art
+
+【Midjourney使用例】
+/imagine [キャラクタープロンプト], fantasy trading card game illustration,
+anime art style, upper body portrait, vibrant colors, high quality,
+--ar 2:3 --style raw --v 6
+
+【レアリティ別品質指定】
+SSR: intricate details, masterpiece, --q 2
+SR:  detailed artwork, --q 1
+R:   clean simple art, --q 1
+N:   clean simple art, --q 1
+
+推奨サイズ: 512x768px（カード縦長 2:3）
+
+
+========================================
+ウィッチクラス（Witch Class）
+クラス共通追記: witch class, dark purple and teal color palette,
+               mystical atmosphere, spell effects
+========================================
+
+--- Queen枠 ---
+
+[SSR] Voltaire the Swamp Witch
+Voltaire the Swamp Witch, dark queen in elaborate purple robes standing in
+murky swamp water, long silver hair, glowing green eyes, surrounded by dark
+magic tendrils, sinister elegant expression, SSR rarity elaborate detail
+
+[SR] Silvia the Mist Witch
+Silvia the Mist Witch, graceful witch in flowing lavender robes, white hair
+with soft blue highlights, misty aura around hands, gentle but cunning smile,
+SR rarity
+
+[R] Molda the Cursed Witch
+Molda the Cursed Witch, middle-aged witch in dark tattered robes, green skin
+tones, holding a gnarled staff, cursed symbols floating nearby, stern expression,
+R rarity
+
+[N] Luna the Apprentice Witch
+Luna the Apprentice Witch, young girl in simple purple witch apprentice robes,
+small pointy hat, curious expression, holding a basic wand, N rarity
+
+--- Rook枠 ---
+
+[SSR] Gracia the Ice Wall Witch
+Gracia the Ice Wall Witch, imposing witch armored in crystalline ice, pale blue
+hair, icy barrier forming around her, cold regal expression, ice shard particles,
+SSR rarity
+
+[SR] Feena the Barrier Witch
+Feena the Barrier Witch, elegant witch with protective magical circle floating
+around her, white and blue robes, focused expression, SR rarity
+
+[R] Dolba the Stone Wall Witch
+Dolba the Stone Wall Witch, sturdy witch with rock-like gray robes and stone
+motifs, crossed arms, reliable expression, R rarity
+
+[N] Sera the Support Witch
+Sera the Support Witch, young pleasant-looking witch in simple robes, warm smile,
+small glowing orb in hands, N rarity
+
+--- Bishop枠 ---
+
+[SSR] Neclia the Decay Witch
+Neclia the Decay Witch, sinister witch with decaying dark armor, pale cracked
+skin, death-magic aura, skeletal motifs, one eye glowing, SSR rarity elaborate
+menacing design
+
+[SR] Veira the Poison Mist Witch
+Veira the Poison Mist Witch, slender witch with green-tinted robes, purple
+poison mist swirling around her, dangerous smirk, SR rarity
+
+[R] Mira the Illusion Witch
+Mira the Illusion Witch, mysterious witch with semi-transparent veils, eyes
+closed in concentration, distortion visual effects around her, R rarity
+
+[N] Chika the Curse Apprentice Witch
+Chika the Curse Apprentice Witch, small young witch with dark marks on cheeks,
+surprised expression, holding tiny dark orb, N rarity
+
+--- Knight枠 ---
+
+[SSR] Tempest the Storm Witch
+Tempest the Storm Witch, powerful witch on a wind current, dramatic silver and
+gold robes whipping in wind, lightning crackling, commanding pose, SSR rarity
+
+[SR] Lyra the Gale Witch
+Lyra the Gale Witch, swift witch with windswept teal hair, wind magic swirling
+around hands, energetic pose, SR rarity
+
+[R] Fuuka the Gust Witch
+Fuuka the Gust Witch, athletic-looking witch in lighter robes, small wind
+effects, determined expression, R rarity
+
+[N] Shion the Wind-Chasing Witch
+Shion the Wind-Chasing Witch, cheerful young witch running forward, braided
+hair in wind, simple robes, carefree expression, N rarity
+
+--- Pawn枠 ---
+
+[SSR] Dorcia the Binding Witch
+Dorcia the Binding Witch, intense witch with chain-like dark magic binding
+around both arms, wild dark hair, cursed marks on face, SSR rarity
+
+[SR] Decoya the Decoy Witch
+Decoya the Decoy Witch, cunning witch with exaggerated innocent expression,
+colorful patches on robes, one wink, SR rarity
+
+[R] Goblina the Goblin Witch
+Goblina the Goblin Witch, small mischievous witch with goblin-like features,
+green-tinted skin, gap-toothed grin, ragged robes, R rarity
+
+[N] Minia the Rough Apprentice Witch
+Minia the Rough Apprentice Witch, clumsy-looking young girl in ill-fitting
+apprentice robes, disheveled, determined expression, N rarity
+
+
+========================================
+ブレードクラス（Blade Class）
+クラス共通追記: blade warrior class, red and orange color palette,
+               aggressive combat stance, sharp weapon effects
+========================================
+
+--- Queen枠 ---
+
+[SSR] Gardios the Conqueror Swordsman
+Gardios the Conqueror Swordsman, massive armored warrior with twin great
+swords, red cape billowing, battle-scarred face, overwhelmingly powerful aura,
+explosion effects behind, SSR rarity
+
+[SR] Shura the Gale Swordsman
+Shura the Gale Swordsman, agile female warrior with dual blades, orange
+streaked short hair, fierce expression, slashing motion blur, SR rarity
+
+[R] Reia the Swift Blade Swordsman
+Reia the Swift Blade Swordsman, young female fighter with single sword, red
+ponytail, battle-ready stance, R rarity
+
+[N] Kain the Young Swordsman
+Kain the Young Swordsman, teenage male warrior with basic sword, short brown
+hair, earnest expression, simple armor, N rarity
+
+--- Rook枠 ---
+
+[SSR] Dragas the Fortress Breaker Spearman
+Dragas the Fortress Breaker Spearman, heavily armored giant warrior with
+enormous lance, cracking shield motifs on armor, charging pose, fearsome
+expression, SSR rarity
+
+[SR] Bald the Charging Spearman
+Bald the Charging Spearman, burly spearman in thick plate armor, charging
+forward, gritted teeth, SR rarity
+
+[R] Golda the Straight Spearman
+Golda the Straight Spearman, stocky soldier with sturdy spear, no-nonsense
+expression, basic plate armor, R rarity
+
+[N] Klon the Recruit
+Klon the Recruit, young male soldier with basic spear and leather armor,
+nervous but determined expression, N rarity
+
+--- Bishop枠 ---
+
+[SSR] Zephyr the Assassin
+Zephyr the Assassin, sleek black-clad assassin with hidden blades, shadow
+cloak effect, single glowing eye visible through mask, teleporting shadow
+duplicate behind, SSR rarity
+
+[SR] Mirza the Scout
+Mirza the Scout, quick scout with lightweight armor and dual daggers, hood up,
+alert scanning expression, SR rarity
+
+[R] Crow the Ninja
+Crow the Ninja, masked ninja in dark gray outfit, hand on sword, crouching
+ready pose, R rarity
+
+[N] Lin the Apprentice Scout
+Lin the Apprentice Scout, young female scout in partial leather armor, wide
+eyes, short dagger, curious nervous expression, N rarity
+
+--- Knight枠 ---
+
+[SSR] Lightning the Godspeed Knight
+Lightning the Godspeed Knight, blazing fast knight on spectral horse,
+lightning cracking around lance, speed blur effects, SSR rarity
+
+[SR] Galeon the Swift Knight
+Galeon the Swift Knight, determined cavalry knight mid-gallop, orange plume
+on helmet, lance forward, SR rarity
+
+[R] Dag the Charging Knight
+Dag the Charging Knight, young knight in standard armor, sword raised,
+charging forward stance, R rarity
+
+[N] Luca the New Knight
+Luca the New Knight, fresh-faced young knight in clean armor, holding sword
+nervously, hopeful expression, N rarity
+
+--- Pawn枠 ---
+
+[SSR] Berserker the Kamikaze Soldier
+Berserker the Kamikaze Soldier, wild-eyed berserker with explosive devices
+on body, manic grin, ripped red clothing, explosive aura, SSR rarity
+
+[SR] Rush the Assault Soldier
+Rush the Assault Soldier, aggressive forward-leaning soldier, red bandana,
+twin short swords, battle cry expression, SR rarity
+
+[R] Gran the Advance Soldier
+Gran the Advance Soldier, stocky soldier pushing forward, shield and sword,
+stubborn expression, R rarity
+
+[N] Mark the Foot Soldier
+Mark the Foot Soldier, plain young male infantry with basic sword, nervous
+smile, simple uniform, N rarity
+
+
+========================================
+アーキテクトクラス（Architect Class）
+クラス共通追記: architect builder class, brown stone and metal color palette,
+               mechanical and construction motifs, blueprint patterns
+========================================
+
+--- Queen枠 ---
+
+[SSR] Labyrinth the Grand Architect
+Labyrinth the Grand Architect, genius-looking figure in elaborate mechanical
+robes, surrounded by floating blueprint fragments and trap devices, monocle,
+cunning mastermind expression, SSR rarity
+
+[SR] Darma the Schemer
+Darma the Schemer, scheming older man with scroll and quill, detailed trap
+blueprints floating around, sly expression, SR rarity
+
+[R] Trick the Trap Master
+Trick the Trap Master, nimble person setting a hidden trap, tool belt,
+fox-like grin, R rarity
+
+[N] Block the Apprentice Designer
+Block the Apprentice Designer, young person with hard hat and blueprint,
+eager studious expression, basic construction tools, N rarity
+
+--- Rook枠 ---
+
+[SSR] Forte the Iron Fortress Builder
+Forte the Iron Fortress Builder, massive armored builder carrying two large
+stone block constructs, castle motifs, immovable expression, SSR rarity
+
+[SR] Barricade the Wall Builder
+Barricade the Wall Builder, sturdy worker building a defensive wall, broad
+shoulders, determined expression, SR rarity
+
+[R] Golem the Stone Mason
+Golem the Stone Mason, bulky stone-like figure with mason tools, slow
+deliberate expression, R rarity
+
+[N] Craft the Construction Soldier
+Craft the Construction Soldier, average young worker in hard hat, trowel
+in hand, cheerful expression, N rarity
+
+--- Bishop枠 ---
+
+[SSR] Mirage the Illusion Trap Master
+Mirage the Illusion Trap Master, mysterious figure surrounded by illusion-trap
+holographic grids, seeing through multiple perspectives at once, trap-sense
+glowing eyes, SSR rarity
+
+[SR] Detour the Redirect Trap Master
+Detour the Redirect Trap Master, clever-looking person placing directional
+arrow traps, calculating smile, SR rarity
+
+[R] Snap the Gimmick Maker
+Snap the Gimmick Maker, quick-fingered trickster setting spring traps,
+playful grin, R rarity
+
+[N] Pit the Rookie Trap Setter
+Pit the Rookie Trap Setter, young trainee digging a simple pit trap, shovel
+in hand, unsure expression, N rarity
+
+--- Knight枠 ---
+
+[SSR] Ambush the Ambush Commander
+Ambush the Ambush Commander, tactical commander in camouflage armor, placing
+multiple traps simultaneously, predatory focused gaze, SSR rarity
+
+[SR] Flanker the Guerrilla Trap Master
+Flanker the Guerrilla Trap Master, agile guerrilla fighter in light armor,
+sprinting while deploying traps, SR rarity
+
+[R] Scout the Irregular Soldier
+Scout the Irregular Soldier, nimble scout in woodland camouflage, alert
+expression, R rarity
+
+[N] Watch the Lookout Soldier
+Watch the Lookout Soldier, ordinary soldier standing guard, binoculars
+around neck, attentive expression, N rarity
+
+--- Pawn枠 ---
+
+[SSR] Mind the Landmine Soldier
+Mind the Landmine Soldier, battle-hardened soldier with mine-laying equipment,
+calm expression despite dangerous job, SSR rarity
+
+[SR] Wall the Barrier Soldier
+Wall the Barrier Soldier, squat soldier transforming into stone barrier,
+half-human half-stone, determined expression, SR rarity
+
+[R] Ambushu the Lurking Soldier
+Ambushu the Lurking Soldier, camouflaged soldier hiding in grass, only eyes
+visible, R rarity
+
+[N] Sentry the Watchman
+Sentry the Watchman, plain soldier standing at attention, spear, standard
+uniform, N rarity
+
+
+========================================
+パラディンクラス（Paladin Class）
+クラス共通追記: paladin holy class, gold white and blue color palette,
+               divine light effects, holy symbols
+========================================
+
+--- Queen枠 ---
+
+[SSR] Seraphim the Holy Knight Commander
+Seraphim the Holy Knight Commander, majestic female paladin in gleaming gold
+armor, angelic wings of light, resurrection spell glowing, divine radiant
+aura, SSR rarity
+
+[SR] Aegis the Guardian Knight
+Aegis the Guardian Knight, noble male knight with large tower shield, blessing
+light flowing from hand, protective stance, SR rarity
+
+[R] Grace the Healing Knight
+Grace the Healing Knight, gentle female knight with healing magic hands, soft
+golden glow, kind expression, R rarity
+
+[N] Lux the Apprentice Holy Knight
+Lux the Apprentice Holy Knight, young female knight-in-training, small wooden
+shield, hopeful expression, N rarity
+
+--- Rook枠 ---
+
+[SSR] Immortal the Undying Guardian
+Immortal the Undying Guardian, indestructible armored paladin radiating with
+resurrection energy, golden aura, battle-worn but undefeated, SSR rarity
+
+[SR] Bastion the Stalwart Knight
+Bastion the Stalwart Knight, fortress-built knight with huge round shield,
+unshakeable stance, two shields equipped, SR rarity
+
+[R] Egis the Shield Knight
+Egis the Shield Knight, reliable male paladin with kite shield, standard
+stance, dependable expression, R rarity
+
+[N] Guard the Watchman Knight
+Guard the Watchman Knight, straightforward male guard in basic plate, spear
+and shield, neutral attentive expression, N rarity
+
+--- Bishop枠 ---
+
+[SSR] Resurrect the Resurrection Priest
+Resurrect the Resurrection Priest, elderly wise priest with staff and halo,
+golden light raising a fallen ally soul, serene compassionate expression,
+SSR rarity
+
+[SR] Heal the Healer Priest
+Heal the Healer Priest, kind female priest with healing holy water, gentle
+smile, soft green healing magic, SR rarity
+
+[R] Pray the Praying Monk
+Pray the Praying Monk, kneeling monk with hands clasped in prayer, holy
+symbols floating, soft expression, R rarity
+
+[N] Faith the Novice Monk
+Faith the Novice Monk, young robed novice with small candle, earnest praying
+expression, N rarity
+
+--- Knight枠 ---
+
+[SSR] Zepharion the Gale Holy Knight
+Zepharion the Gale Holy Knight, charging white horse paladin with lance,
+wind and holy light trail, inspiring aura, SSR rarity
+
+[SR] Supporter the Escort Knight
+Supporter the Escort Knight, supportive knight boosting allies with a rallying
+flag, enthusiastic encouraging expression, SR rarity
+
+[R] Messenger the Courier Knight
+Messenger the Courier Knight, light cavalry with messenger scroll,
+fast-moving pose, R rarity
+
+[N] Squire the Novice Knight
+Squire the Novice Knight, young squire polishing armor, humble eager
+expression, N rarity
+
+--- Pawn枠 ---
+
+[SSR] Martyr the Sacrifice Soldier
+Martyr the Sacrifice Soldier, noble soldier offering themselves in sacrifice,
+eyes closed peacefully, holy light emanating from body, comrades protected
+behind, SSR rarity
+
+[SR] Protect the Guardian Soldier
+Protect the Guardian Soldier, loyal soldier throwing himself in front of an
+ally, shield raised, determined protective expression, SR rarity
+
+[R] Shielder the Shield Soldier
+Shielder the Shield Soldier, defensive soldier with full-body shield, hunkered
+down position, resolute expression, R rarity
+
+[N] Feith the Believer Soldier
+Feith the Believer Soldier, faithful simple soldier with holy symbol around
+neck, humble smile, N rarity
+
+
+========================================
+ドミナントクラス（Dominant Class）
+クラス共通追記: dominant control class, deep black and dark purple color
+               palette, mind-control and chain motifs, ominous aura
+========================================
+
+--- Queen枠 ---
+
+[SSR] Domina the Domination Queen
+Domina the Domination Queen, dark queen with puppet strings controlling
+multiple enemy pieces, cold beautiful face, shadowed eyes, absolute authority
+expression, SSR rarity
+
+[SR] Charm the Enchantress Mage
+Charm the Enchantress Mage, alluring purple-robed mage casting heart-shaped
+mind control magic, smiling dangerously, SR rarity
+
+[R] Brain the Brainwasher
+Brain the Brainwasher, silver-haired figure with hypnotic spiral eyes, fingers
+pressed to temple, intense stare, R rarity
+
+[N] Marionette the Puppeteer
+Marionette the Puppeteer, ordinary person holding puppet strings, slightly
+vacant smile, N rarity
+
+--- Rook枠 ---
+
+[SSR] Shackle the Chain Dominator
+Shackle the Chain Dominator, dark imposing figure wrapped in chains and
+binding magic, chains extending toward off-screen enemies, terrifying
+controlling presence, SSR rarity
+
+[SR] Bind the Restrainer
+Bind the Restrainer, muscular dark figure tightening binding chains, cold
+expression, SR rarity
+
+[R] Capture the Capture Soldier
+Capture the Capture Soldier, armored figure with capture net and binding rope,
+professional expression, R rarity
+
+[N] Warden the Guard Warden
+Warden the Guard Warden, uniformed jailer with keys and shackles, stern
+expression, N rarity
+
+--- Bishop枠 ---
+
+[SSR] Mimic the Mimicry Witch
+Mimic the Mimicry Witch, chameleon-like figure copying the appearance of an
+enemy piece, half-transformed, multiple skill-copy effects floating, SSR rarity
+
+[SR] Steal the Skill Thief
+Steal the Skill Thief, shadow-clad figure stealing a glowing skill gem from
+an enemy, sneaky expression, SR rarity
+
+[R] Echo the Copycat
+Echo the Copycat, young figure mimicking an enemy pose, copy-shadow beside
+them, curious expression, R rarity
+
+[N] Watcher the Observer
+Watcher the Observer, hooded figure watching intently through monocle, taking
+notes, analytical expression, N rarity
+
+--- Knight枠 ---
+
+[SSR] Ambros the Ambush Dominator
+Ambros the Ambush Dominator, cavalry fighter leaping onto enemy and taking
+control, golden mind-break effect, decisive SSR rarity
+
+[SR] Corrupt the Infecting Knight
+Corrupt the Infecting Knight, dark knight whose touch corrupts enemies, purple
+spreading effect, dangerous close expression, SR rarity
+
+[R] Disrupt the Disruptive Knight
+Disrupt the Disruptive Knight, knight using noise and confusion to disable
+enemy skills, armored with jamming devices, SR rarity
+
+[N] Nobis the Novice Dominator
+Nobis the Novice Dominator, young timid person with mind-control starter kit,
+unsure expression, N rarity
+
+--- Pawn枠 ---
+
+[SSR] Infect the Infection Soldier
+Infect the Infection Soldier, pale soldier with infectious dark particles
+spreading from wounds, sacrifice pose, haunting expression, SSR rarity
+
+[SR] Infiltrate the Sleeper Agent
+Infiltrate the Sleeper Agent, camouflaged spy blending into background,
+sneaking expression, SR rarity
+
+[R] Sabotage the Saboteur
+Sabotage the Saboteur, sneaky figure cutting wires and disabling traps,
+smirking expression, R rarity
+
+[N] Spy the Rookie Agent
+Spy the Rookie Agent, young spy in trench coat too big for them, peeking
+nervously, N rarity
+
+
+========================================
+ニュートラル（Neutral）
+クラス共通追記: neutral class, balanced blue-gray and forest green color
+               palette, versatile warrior aesthetic, no extreme motifs
+========================================
+
+--- Queen枠 ---
+
+[SSR] Tempesta the Storm Queen
+Tempesta the Storm Queen, powerful queen summoning a massive storm, dramatic
+wind and lightning, elegant battle dress, SSR rarity
+
+[SR] Medusa the Binding Queen
+Medusa the Binding Queen, regal queen with stone-petrifying gaze, snake motifs
+on armor, serpentine hair, SR rarity
+
+[R] Egina the Guardian Queen
+Egina the Guardian Queen, steadfast queen raising a protective barrier, strong
+maternal protective expression, R rarity
+
+[N] Plena the Plains Queen
+Plena the Plains Queen, ordinary wise-looking queen in simple robes, calm
+measured expression, N rarity
+
+--- Rook枠 ---
+
+[SSR] Bastion the Fortress Guardian
+Bastion the Fortress Guardian, titanic armored guardian with castle tower
+motifs on shoulders, impenetrable stance, SSR rarity
+
+[SR] Counter the Counter-Lancer
+Counter the Counter-Lancer, battle-tested spear fighter with scarred armor,
+counter-attack ready stance, SR rarity
+
+[R] Iron the Iron-Clad Guard
+Iron the Iron-Clad Guard, standard heavily armored guard, reliable dependable
+expression, R rarity
+
+[N] Rock the Stone Guard
+Rock the Stone Guard, plain sturdy guard with stone-like features, immovable
+expression, N rarity
+
+--- Bishop枠 ---
+
+[SSR] Arcanum the Archmage
+Arcanum the Archmage, ancient wise sage surrounded by stolen enemy skill-orbs,
+floating library of knowledge, masterful commanding expression, SSR rarity
+
+[SR] Sealer the Sealing Bishop
+Sealer the Sealing Bishop, solemn bishop applying seal marks to enemy
+abilities, deep concentration expression, SR rarity
+
+[R] Blesser the Blessing Bishop
+Blesser the Blessing Bishop, friendly bishop blessing allies with holy water
+sprinkle, warm smile, R rarity
+
+[N] Nobis the Young Bishop
+Nobis the Young Bishop, fresh-faced young bishop with novice robes, studying
+holy text, N rarity
+
+--- Knight枠 ---
+
+[SSR] Paragon the Champion Knight
+Paragon the Champion Knight, the ultimate knight, gleaming white and gold
+armor, lance of justice, inspirational hero pose, SSR rarity
+
+[SR] Armored the Heavy Knight
+Armored the Heavy Knight, heavily plated veteran knight with counter-attack
+shield raised, experienced expression, SR rarity
+
+[R] Moral the Morale Knight
+Moral the Morale Knight, rallying knight raising sword and flag, cheering
+teammates, R rarity
+
+[N] Plane the Plains Knight
+Plane the Plains Knight, average reliable knight in standard armor, steady
+trustworthy expression, N rarity
+
+--- Pawn枠 ---
+
+[SSR] Hero the Heroic Infantry
+Hero the Heroic Infantry, determined soldier who became a legend, tattered
+but heroic pose, battle aura, veteran scars, SSR rarity
+
+[SR] Curse the Cursed Infantry
+Curse the Cursed Infantry, haunted soldier with dark curse marks, grimacing
+expression, cursed chain wrapped around arm, SR rarity
+
+[R] Counter the Counter-Attacker Infantry
+Counter the Counter-Attacker Infantry, defensive soldier mid-counter strike,
+deflecting an enemy blow, R rarity
+
+[N] Plain the Plains Infantry
+Plain the Plains Infantry, ordinary foot soldier in basic armor, neutral
+reliable expression, N rarity
+
+
+========================================
+統計
+========================================
+ウィッチ:      20体（Queen×4 / Rook×4 / Bishop×4 / Knight×4 / Pawn×4）
+ブレード:      20体
+アーキテクト:  20体
+パラディン:    20体
+ドミナント:    20体
+ニュートラル:  20体
+合計:         120体
+
+SSR: 30体（各クラス5体）
+SR:  30体
+R:   30体
+N:   30体

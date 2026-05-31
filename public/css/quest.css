@@ -1,0 +1,176 @@
+/* quest.css — クエストモード画面（Phase 15） */
+/* deck.css / play.css のデザイントークンを継承 */
+
+.quest-container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 8px 0 40px;
+}
+
+/* ─── 章 ───────────────────────────────────────── */
+.quest-chapter {
+  margin-bottom: 28px;
+}
+.quest-chapter-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(245, 197, 24, 0.25);
+}
+
+/* ─── ステージカード ───────────────────────────── */
+.quest-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quest-stage {
+  background: var(--bg-panel);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  transition: border-color 0.15s, transform 0.05s, background 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.quest-stage:hover {
+  border-color: var(--accent-soft);
+  background: rgba(255, 255, 255, 0.03);
+}
+.quest-stage:active { transform: scale(0.985); }
+
+.quest-stage-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.quest-stage-num {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.quest-difficulty {
+  color: var(--gold);
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.quest-cleared-badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #2ecc71;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+.quest-stage-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.quest-stage-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.quest-stage-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.quest-class-tag {
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--text-muted);
+}
+
+.quest-reward-gem {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.quest-reward-char {
+  color: var(--rarity-ssr);
+  font-weight: 700;
+}
+
+/* ─── デッキ選択モーダル内 ─────────────────────── */
+.quest-deck-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.quest-deck-item:hover { border-color: var(--accent); }
+
+.quest-deck-name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.quest-deck-class {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 3px 8px;
+  background: var(--bg-panel);
+  border-radius: 10px;
+}
+
+/* ─── クエスト報酬通知（match画面用） ─────────── */
+.quest-reward-card {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: rgba(245, 197, 24, 0.08);
+  border: 1px solid rgba(245, 197, 24, 0.3);
+  border-radius: var(--radius);
+  text-align: center;
+}
+.quest-reward-card-title {
+  font-size: 12px;
+  color: var(--gold);
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.quest-reward-card-body {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.quest-reward-card-char {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--rarity-ssr);
+  font-weight: 700;
+}
