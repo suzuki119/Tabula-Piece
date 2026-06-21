@@ -489,7 +489,7 @@ https://example.com/tabula-piece/public/home.html?user_id=1
 
 - キャラクターイラスト（プロンプト作成済）
 - 本番サーバーデプロイ（ロリポップ）
-- クエストの章・ステージ追加（現在 Chapter 1 のみ）
+- クエストの章・ステージ追加: Chapter 1〜5 実装済（`db/011_quest_chapters.sql`、各クラスを章ボス化）。以降は新規ストーリー章・高難度章の追加が候補
 
 ---
 
